@@ -345,7 +345,7 @@
         hold: 0, dash: 0, dashHit: false, slow: 0,
         wither: 0, witherTick: 0, grudge: 0, atkBuff: 1, atkNerf: 1, noDamageDealt: 0,
         collisionLock: 0, clubAngle: Math.random() * Math.PI * 2, clubCd: 0,
-        phaseTimer: 0, phaseActive: false, marchTimer: 0, marchCharge: 0, marchAngle: 0,
+        phaseTimer: 0, phaseActive: false, atomCd: 0, atomMerge: 0, marchTimer: 0, marchCharge: 0, marchAngle: 0,
         gimmickAtk: 0, idiaPhase: 0, idiaTimer: 0, idiaAngle: 0, bladeAura: 0,
         spinTimer: 0, spinAngle: 0, spinUntil: 0, spinStart: 0,
         urielBurst: p.id === "red-5-1" ? 2.5 : 0, urielLaser: p.id === "red-5-1" ? 2 : 0,
@@ -449,10 +449,41 @@
       f.p = Object.assign({}, f.p, { name: "梅塔特隆", displayName: "梅塔特隆", fullArt: "img/chess/art/arena-wg2-left.png" });
       if (sister) {
         sister.p = Object.assign({}, sister.p, { name: "尚达芬妮", displayName: "尚达芬妮", fullArt: "img/chess/art/arena-wg2-right.png" });
+        sister.atomSister = true;
         sister.head = "img/arena/wg2-right.png";
         sister.img = imgFor("img/arena/wg2-right.png");
       }
       state.effects.push({ x: f.x, y: f.y - 30, text: "核动力双子 · 分离", life: 1.2, color: "#f4d28a" });
+    }
+
+    function atomHeaven(main, sister) {
+      if (!main || !sister || main.hp <= 0 || sister.hp <= 0 || main.atomCd > 0) return;
+      main.atomCd = 3.8;
+      const total = Math.max(1, main.hp + sister.hp);
+      const mx = (main.x + sister.x) / 2, my = (main.y + sister.y) / 2;
+      const target = nearestEnemyBody(main.slot, mx, my);
+      if (target) {
+        const proxy = { x: mx, y: my, slot: main.slot, side: main.side, stats: main.stats };
+        spawnBeams(proxy, target, {
+          count: 1, aim: "current", range: 900,
+          damage: Math.max(30, Math.round(total * 0.55)), style: "atom"
+        });
+      }
+      main.hp = Math.min(50, Math.max(1, Math.round(total / 2)));
+      sister.hp = Math.min(50, Math.max(1, total - main.hp));
+      main.maxHp = 50; sister.maxHp = 50;
+      const dx = main.x - sister.x, dy = main.y - sister.y;
+      const a = Math.atan2(dy || 0.01, dx || 1);
+      const rx = Math.cos(a) * 34, ry = Math.sin(a) * 34;
+      main.x = clampToArena(mx + rx, my + ry, main.radius).x;
+      main.y = clampToArena(mx + rx, my + ry, main.radius).y;
+      sister.x = clampToArena(mx - rx, my - ry, sister.radius).x;
+      sister.y = clampToArena(mx - rx, my - ry, sister.radius).y;
+      main.invincible = Math.max(main.invincible, 0.25);
+      sister.invincible = Math.max(sister.invincible, 0.25);
+      main.atomMerge = 0.55;
+      state.effects.push({ x: mx, y: my - 24, text: "原子天堂", life: 1.1, color: "#b8ffcf" });
+      audio.sfx("check");
     }
 
     function sideAllies(slot) {
@@ -658,7 +689,33 @@
           const ang = Math.PI * 2 * i / 3 + Math.random() * 0.4;
           spawnAlly(a, "slime10", 10, a.x + Math.cos(ang) * 28, a.y + Math.sin(ang) * 28, { radius: 9, speed: 190, damage: 6, splitGen: 2 });
         }
+      } else if (a.kind === "slime40") {
+        // 大祸抚死亡：分裂成两个中祸抚
+        for (const dx of [-30, 30]) {
+          spawnAlly(a, "slime20", 20, a.x + dx, a.y - 16, { radius: 13, speed: 170, damage: 9, splitGen: 1 });
+        }
       }
+    }
+
+    function mergeSlimes(a, b) {
+      if (!a || !b || a === b || a.hp <= 0 || b.hp <= 0) return false;
+      if (a.slot !== b.slot || a.kind !== b.kind) return false;
+      const isSmall = a.kind === "slime10";
+      const isMedium = a.kind === "slime20";
+      if (!isSmall && !isMedium) return false;
+      const kind = isSmall ? "slime20" : "slime40";
+      const hp = Math.min(kind === "slime40" ? 40 : 20, a.hp + b.hp);
+      const x = (a.x + b.x) / 2, y = (a.y + b.y) / 2;
+      a.hp = 0; a.dead = true;
+      b.hp = 0; b.dead = true;
+      spawnAlly(a, kind, hp, x, y, {
+        radius: kind === "slime40" ? 17 : 13,
+        speed: kind === "slime40" ? 150 : 170,
+        damage: kind === "slime40" ? 12 : 9,
+        splitGen: kind === "slime40" ? 1 : 2
+      });
+      state.effects.push({ x, y: y - 18, text: "祸抚合体", life: 0.9, color: "#d8a6ff" });
+      return true;
     }
 
     function onHit(source, target) {
@@ -1047,7 +1104,7 @@
           x1: f.x, y1: f.y, x2: f.x + Math.cos(a) * range, y2: f.y + Math.sin(a) * range,
           t: 0.32, active: 0, fired: false, owner: f.slot, target: o.slot,
           damage: cfg.damage, shape: "beam", special: cfg.special || "none", status: cfg.status || null,
-          range, src: f, color: sideColor(f.side)
+          range, src: f, color: sideColor(f.side), style: cfg.style || ""
         });
       }
     }
@@ -1082,6 +1139,10 @@
       const id = f.p.id;
       if (!id || (!id.startsWith("ruka-") && !id.startsWith("chaos-") && id !== "black-6-2" && id !== "red-5-1")) return;
       const attackRate = f.atkRate || 1;
+      if (id === "red-6-2") {
+        if (f.atomCd > 0) f.atomCd = Math.max(0, f.atomCd - dt);
+        if (f.atomMerge > 0) f.atomMerge = Math.max(0, f.atomMerge - dt);
+      }
       if (id === "red-5-1") {
         f.urielBurst -= dt * attackRate;
         f.urielLaser -= dt * attackRate;
@@ -1736,8 +1797,27 @@
 
     function updateAllyCollisions() {
       if (state.phase !== "fight") return;
+      // 同尺寸祸抚碎片碰撞合体：小 + 小 → 中；中 + 中 → 大。
+      const slimes = state.allies.filter(a => a.hp > 0 && (a.kind === "slime10" || a.kind === "slime20"));
+      for (let i = 0; i < slimes.length; i++) {
+        let merged = false;
+        for (let j = i + 1; j < slimes.length; j++) {
+          const a = slimes[i], b = slimes[j];
+          if (a.hp <= 0 || b.hp <= 0 || a.slot !== b.slot || a.kind !== b.kind) continue;
+          if (dist(a.x, a.y, b.x, b.y) < a.radius + b.radius) {
+            mergeSlimes(a, b);
+            merged = true;
+            break;
+          }
+        }
+        if (merged) break;
+      }
       for (const a of state.allies) {
         if (a.hp <= 0) continue;
+        const own = fighter(a.slot);
+        if (a.atomSister && own && own.p.id === "red-6-2" && own.splitKind === "metatron" && own.hp > 0) {
+          if (dist(own.x, own.y, a.x, a.y) < own.radius + a.radius) atomHeaven(own, a);
+        }
         const main = fighter(a.slot === "a" ? "b" : "a");
         if (a.noTarget) continue;
         if (main && main.hp > 0) allyCollision(a, main);
@@ -1958,6 +2038,16 @@
         ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2);
         if (!l.fired) {
           ctx.setLineDash([9, 9]); ctx.strokeStyle = "rgba(255,120,160,.55)"; ctx.lineWidth = 2;
+        } else if (l.style === "atom") {
+          ctx.setLineDash([]);
+          ctx.strokeStyle = "#37ff9a"; ctx.lineWidth = 26;
+          ctx.shadowColor = "#37ff9a"; ctx.shadowBlur = 34;
+          ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2); ctx.stroke();
+          ctx.strokeStyle = "#eafff5"; ctx.lineWidth = 11;
+          ctx.shadowColor = "#ffffff"; ctx.shadowBlur = 22;
+          ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2); ctx.stroke();
+          ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2); ctx.stroke();
         } else {
           ctx.setLineDash([]); ctx.strokeStyle = l.color; ctx.lineWidth = 8;
           ctx.shadowColor = l.color; ctx.shadowBlur = 18;

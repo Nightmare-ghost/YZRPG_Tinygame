@@ -1,0 +1,223 @@
+/* ============================================================
+   成就系统
+   ============================================================ */
+body.ach-open{overflow:hidden}
+.ach-modal{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:clamp(10px,3vw,34px)}
+.ach-modal[hidden]{display:none}
+.ach-backdrop{position:absolute;inset:0;background:rgba(3,7,12,.74);backdrop-filter:blur(7px)}
+.ach-panel{
+  position:relative;width:min(1020px,100%);max-height:min(860px,92dvh);
+  display:flex;flex-direction:column;
+  background:linear-gradient(155deg,rgba(12,22,31,.98),rgba(5,10,16,.99));
+  border:1px solid rgba(232,192,122,.38);border-radius:10px;
+  box-shadow:0 34px 100px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,243,216,.07);
+  color:var(--paper);overflow:hidden;
+}
+.ach-head{display:flex;justify-content:space-between;gap:18px;padding:22px 24px 16px;border-bottom:1px solid var(--line)}
+.ach-head p{font-size:9px;letter-spacing:.28em;color:var(--gold)}
+.ach-head h2{font-family:var(--serif);font-size:clamp(26px,3vw,38px);letter-spacing:.08em;color:#fff3d8;margin-top:5px}
+.ach-head small{display:block;margin-top:6px;color:var(--muted);font-size:10px}
+.ach-head-right{display:flex;align-items:flex-start;gap:14px}
+.ach-count{font-family:var(--serif);font-size:24px;color:var(--gold);white-space:nowrap}
+.ach-close{appearance:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;cursor:pointer}
+.ach-close:hover{color:var(--paper);border-color:var(--line-2)}
+.ach-actions{display:flex;gap:8px;padding:11px 24px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ach-btn{appearance:none;border:1px solid var(--line-2);background:rgba(232,192,122,.05);color:var(--gold);font:inherit;font-size:11px;letter-spacing:.1em;padding:7px 13px;border-radius:4px;cursor:pointer}
+.ach-btn:hover{background:rgba(232,192,122,.12)}
+.ach-body{overflow:auto;padding:16px 24px 22px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ach-group{border:1px solid rgba(232,192,122,.16);border-radius:6px;background:rgba(7,13,20,.6);padding:12px;min-width:0}
+.ach-group-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding-bottom:8px;border-bottom:1px solid rgba(232,192,122,.12);margin-bottom:4px}
+.ach-group-head div{display:flex;flex-direction:column;gap:2px}
+.ach-group-head span{font-size:7px;letter-spacing:.2em;color:var(--muted-2)}
+.ach-group-head strong{font-family:var(--serif);font-size:16px;font-weight:500;color:var(--gold)}
+.ach-group-head small{font-size:9px;color:var(--muted-2);letter-spacing:.08em;white-space:nowrap}
+.ach-row{display:flex;align-items:flex-start;gap:8px;padding:8px 2px;border-bottom:1px dashed rgba(232,192,122,.08)}
+.ach-row:last-child{border-bottom:0}
+.ach-mark{width:18px;flex:0 0 auto;text-align:center;color:var(--gold);font-size:12px;line-height:1.4}
+.ach-row.done .ach-mark{color:#ffdc8a;text-shadow:0 0 10px rgba(232,192,122,.4)}
+.ach-row>div{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.ach-row strong{font-size:12px;color:#f4e8cf;font-weight:600}
+.ach-row small{font-size:9px;line-height:1.5;color:var(--muted)}
+.ach-row em{font-style:normal;font-size:8px;color:var(--muted-2);white-space:nowrap;padding-top:3px;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.ach-row.locked strong{color:var(--muted)}
+.ach-row.locked small,.ach-row.locked em{color:var(--muted-2)}
+.ach-row.hidden{opacity:.62}
+.ach-row.hidden strong{letter-spacing:.1em}
+.ach-foot{display:flex;justify-content:space-between;gap:14px;padding:11px 24px;border-top:1px solid var(--line);color:var(--muted-2);font-size:9px;letter-spacing:.03em}
+.ach-foot code{color:var(--gold-2);font-size:9px}
+
+@media (max-width:760px){
+ .ach-modal{padding:0}
+ .ach-panel{width:100%;max-height:100dvh;height:100dvh;border-radius:0;border-left:0;border-right:0}
+ .ach-head{padding:16px 16px 12px}
+ .ach-head small{font-size:9px}
+ .ach-actions{padding:9px 16px}
+ .ach-body{grid-template-columns:1fr;padding:10px 12px 18px}
+ .ach-foot{flex-direction:column;gap:5px;padding:9px 16px}
+ .ach-row em{max-width:96px}
+}
+
+
+/* ================= 主页右侧内嵌成就页 ================= */
+.home-achievements{
+  margin-top:14px;
+  padding:14px;
+  border:1px solid rgba(232,192,122,.3);
+  border-radius:12px;
+  background:linear-gradient(155deg,rgba(10,18,26,.98),rgba(5,10,16,.98));
+  color:var(--paper);
+  box-shadow:0 20px 50px rgba(0,0,0,.22);
+  max-height:min(720px,calc(100dvh - 300px));
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.home-achievements.is-flash{animation:achFlash .9s ease}
+@keyframes achFlash{0%,100%{box-shadow:0 20px 50px rgba(0,0,0,.22)}35%{box-shadow:0 0 0 2px rgba(232,192,122,.55),0 20px 50px rgba(0,0,0,.22)}}
+.ach-inline-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding-bottom:9px;border-bottom:1px solid rgba(232,192,122,.18)}
+.ach-inline-head p{font-size:10px;letter-spacing:.22em;color:var(--gold)}
+.ach-inline-head h3{font-family:var(--serif);font-size:24px;font-weight:500;letter-spacing:.08em;color:#fff3d8;margin-top:2px}
+.ach-inline-head small{display:block;margin-top:3px;font-size:10px;line-height:1.55;color:var(--muted)}
+.ach-inline-head .ach-count{font-size:20px;padding-top:3px}
+.home-achievements .ach-actions{padding:9px 0;border-bottom:1px solid rgba(232,192,122,.14)}
+.home-achievements .ach-body{padding:8px 0 0;grid-template-columns:1fr;gap:8px;overflow:auto;min-height:0;max-height:520px;padding-right:3px}
+.home-achievements .ach-group{padding:9px;background:rgba(8,15,22,.72);border-color:rgba(232,192,122,.16)}
+.home-achievements .ach-group-head strong{font-size:15px}
+.home-achievements .ach-group-head span{font-size:9px}
+.home-achievements .ach-group-head small{font-size:10px}
+.home-achievements .ach-row{padding:7px 2px;gap:7px}
+.home-achievements .ach-row strong{font-size:12px;line-height:1.4}
+.home-achievements .ach-row small{font-size:10px;line-height:1.55;color:#a9b8bd}
+.home-achievements .ach-row em{font-size:10px;color:#8fa1a7;max-width:112px}
+.home-achievements .ach-row.locked small{color:#a8b7bc}
+.home-achievements .ach-row.locked strong{color:#d7cbb8}
+.home-achievements .ach-row.done strong{color:#ffd77a}
+.home-achievements .ach-row.done .ach-mark{color:#ffd77a}
+.home-achievements .ach-row.done.metal-bronze{border-left:3px solid #c88755;background:linear-gradient(90deg,rgba(200,135,85,.13),transparent 65%)}
+.home-achievements .ach-row.done.metal-silver{border-left:3px solid #cbd5df;background:linear-gradient(90deg,rgba(203,213,223,.13),transparent 65%)}
+.home-achievements .ach-row.done.metal-gold{border-left:3px solid #f1c96f;background:linear-gradient(90deg,rgba(241,201,111,.15),transparent 65%)}
+.home-achievements .ach-row.special{border:1px solid transparent;border-image:linear-gradient(120deg,#ff8fae,#ffd36b,#8fe7c3,#8fc9ff,#ca9aff) 1}
+.home-achievements .ach-row.special.done strong{color:#ffe5a3}
+.ach-inline-foot{display:flex;justify-content:space-between;gap:8px;padding-top:8px;margin-top:4px;border-top:1px solid rgba(232,192,122,.14);font-size:10px;line-height:1.5;color:#9cabb1}
+.ach-inline-foot code{color:#e8c07a;font-size:9px}
+.home-achievements .ach-row.hidden{opacity:.82}
+
+/* 小字统一提高可读性 */
+.mem-back-copy em{font-size:9px}
+.mem-back-copy small{font-size:9px}
+.mem-face-copy small{font-size:9px}
+.mem-setup-head>p:last-child{font-size:12px}
+.mem-choice em{font-size:11px}
+.suika-special-row b{font-size:11px}
+.suika-special-row span{font-size:9px;line-height:1.55;color:#52606a}
+.suika-panel h3 small{font-size:9px}
+.suika-help{font-size:11px}
+.card-kicker{font-size:10px!important}
+.card-desc{font-size:12px!important}
+
+@media (max-width:760px){
+ .home-achievements{max-height:none;margin-top:12px}
+ .home-achievements .ach-body{max-height:none;overflow:visible}
+ .ach-inline-head h3{font-size:22px}
+ .ach-inline-foot{flex-direction:column;gap:4px}
+}
+
+
+/* ================= 主页白底金字入口 ================= */
+.home-ach-entry{
+  margin-top:14px;padding:14px 15px;border-radius:14px;
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(255,248,228,.96));
+  border:1px solid rgba(201,155,88,.55);
+  box-shadow:0 14px 36px rgba(54,105,145,.12),inset 0 1px 0 #fff;
+}
+.home-ach-entry-icon{width:38px;height:38px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(201,155,88,.55);background:radial-gradient(circle at 35% 30%,#fff,#ffe9b8);color:#b9822f;font-size:18px}
+.home-ach-entry-copy{flex:1;min-width:0}
+.home-ach-entry-copy p{font-size:9px;letter-spacing:.18em;color:#b9822f}
+.home-ach-entry-copy strong{display:block;font-family:var(--serif);font-size:21px;line-height:1.2;color:#8c5b17;letter-spacing:.06em}
+.home-ach-entry-copy small{display:block;margin-top:2px;font-size:10px;color:#8b7960}
+.home-ach-entry-copy b{color:#a67024;font-weight:700}
+.home-ach-entry-btn{
+  appearance:none;border:1px solid #c99b58;border-radius:4px;background:#fff8e8;
+  color:#9a651b;font:inherit;font-size:11px;letter-spacing:.08em;padding:8px 11px;cursor:pointer;white-space:nowrap;
+}
+.home-ach-entry-btn:hover{background:#ffe9b8;color:#6f450c}
+@media (max-width:460px){
+  .home-ach-entry{align-items:flex-start;flex-wrap:wrap}
+  .home-ach-entry-btn{width:100%}
+}
+
+/* ================= 黑色细则窗口：分组收起 ================= */
+.ach-group-head{
+  appearance:none;width:100%;background:transparent;border:0;color:inherit;font:inherit;
+  cursor:pointer;text-align:left;padding:0 0 8px;margin-bottom:0;
+}
+.ach-group-head:hover strong{color:#ffe3a0}
+.ach-group-head small b{display:inline-block;margin-left:3px;font-size:12px;color:var(--gold);transition:transform .2s}
+.ach-group.is-open .ach-group-head small b{transform:rotate(180deg)}
+.ach-rows{display:none}
+.ach-group.is-open .ach-rows{display:block}
+.ach-group-head>div{pointer-events:none}
+.ach-group-head small{pointer-events:none}
+
+/* 细则窗口的成就边/金色文字（不受主页面板作用域限制） */
+.ach-panel .ach-row.done strong,
+.ach-panel .ach-row.done .ach-mark{color:#ffd77a;text-shadow:0 0 9px rgba(232,192,122,.22)}
+.ach-panel .ach-row.done.metal-bronze{border-left:3px solid #c88755;background:linear-gradient(90deg,rgba(200,135,85,.15),transparent 68%)}
+.ach-panel .ach-row.done.metal-silver{border-left:3px solid #cbd5df;background:linear-gradient(90deg,rgba(203,213,223,.15),transparent 68%)}
+.ach-panel .ach-row.done.metal-gold{border-left:3px solid #f1c96f;background:linear-gradient(90deg,rgba(241,201,111,.17),transparent 68%)}
+.ach-panel .ach-row.special.done{border:1px solid transparent;border-image:linear-gradient(120deg,#ff8fae,#ffd36b,#8fe7c3,#8fc9ff,#ca9aff) 1}
+.ach-panel .ach-row.special.done strong{color:#ffe5a3}
+.ach-panel .ach-row.special .ach-mark{color:#ffd7a0}
+.ach-panel .ach-row strong{font-size:13px}
+.ach-panel .ach-row small{font-size:11px;line-height:1.55;color:#aebdc2}
+.ach-panel .ach-row em{font-size:9px;color:#93a5ab}
+.ach-panel .ach-group-head span{font-size:8px}
+.ach-panel .ach-group-head strong{font-size:17px}
+.ach-panel .ach-group-head small{font-size:10px}
+.ach-panel .ach-count{font-size:26px}
+.ach-panel .ach-head small{font-size:11px}
+.ach-panel .ach-foot{font-size:10px}
+
+
+/* 子类标题与问号遮罩 */
+.ach-subhead{
+  display:none;margin:8px 0 2px;padding:4px 2px 3px;
+  font-size:10px;letter-spacing:.2em;color:#b99a63;
+  border-bottom:1px solid rgba(232,192,122,.12);
+}
+.ach-group.is-open .ach-subhead{display:block}
+.ach-row .ach-mark{font-size:12px}
+.ach-row.hidden .ach-mark{color:#8b7c68}
+.ach-row.hidden strong{font-family:var(--sans);letter-spacing:.08em;color:#a99a83}
+.ach-panel .ach-group-head small b{color:#e8c07a}
+.ach-panel .ach-body{gap:10px}
+.ach-panel .ach-group{padding:10px 11px}
+.ach-panel .ach-row{padding:8px 2px}
+
+
+/* 成就解锁：上方弹窗 */
+.ach-unlock-host{
+  position:fixed;top:calc(var(--topbar-h) + 10px);left:50%;transform:translateX(-50%);
+  z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;
+  width:min(440px,calc(100vw - 28px));
+}
+.ach-unlock-toast{
+  width:100%;display:flex;align-items:center;gap:11px;
+  padding:11px 15px;border-radius:6px;
+  background:linear-gradient(135deg,rgba(12,22,31,.98),rgba(5,10,16,.98));
+  border:1px solid rgba(232,192,122,.55);
+  box-shadow:0 16px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,243,216,.08);
+  color:#fff3d8;opacity:0;transform:translateY(-16px) scale(.97);
+  transition:opacity .28s ease,transform .28s var(--ease);
+}
+.ach-unlock-toast.show{opacity:1;transform:none}
+.ach-unlock-toast.is-special{border:1px solid transparent;border-image:linear-gradient(120deg,#ff8fae,#ffd36b,#8fe7c3,#8fc9ff,#ca9aff) 1}
+.ach-unlock-icon{width:34px;height:34px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(232,192,122,.55);background:radial-gradient(circle at 35% 30%,rgba(255,246,214,.25),rgba(232,192,122,.07));color:#ffd77a;font-size:17px}
+.ach-unlock-toast>div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.ach-unlock-toast small{font-size:8px;letter-spacing:.2em;color:#b99a63}
+.ach-unlock-toast strong{font-family:var(--serif);font-size:19px;letter-spacing:.05em;color:#ffe4a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ach-unlock-toast em{font-style:normal;font-size:9px;color:#9eb0b5}
+@media (max-width:600px){
+ .ach-unlock-host{top:calc(var(--topbar-h) + 6px);width:calc(100vw - 20px)}
+ .ach-unlock-toast{padding:9px 11px}
+ .ach-unlock-toast strong{font-size:17px}
+}

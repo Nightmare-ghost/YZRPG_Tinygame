@@ -1,0 +1,157 @@
+/* 审判彩蛋 */
+body.judgement-active{overflow:hidden;background:#000}
+#judgement-overlay{
+  position:fixed;inset:-3vh;z-index:99999;display:none;overflow:hidden;
+  background:#000;color:#e8c661;user-select:none;cursor:pointer;
+  font-family:var(--serif,"Noto Serif SC","Songti SC",serif);
+  animation:jScreenShake .12s infinite;
+}
+#judgement-overlay.on{display:block}
+#judgement-overlay *{box-sizing:border-box}
+#judgement-overlay .j-black{position:absolute;inset:0;background:#000}
+#judgement-overlay .j-gold{
+  position:absolute;inset:0;z-index:1;opacity:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 42%,#ffeaa0 0%,#f0c04e 28%,#b77b16 62%,#4b2c05 100%);
+  transition:opacity 5s ease-in;
+}
+#judgement-overlay.ascend .j-gold{opacity:1}
+#judgement-overlay .j-storm{
+  position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;
+}
+#judgement-overlay .j-storm-img{
+  position:absolute;height:auto;max-width:none;opacity:0;
+  transform:translate(-50%,-50%) rotate(var(--r)) scale(.7);
+  transform-origin:center;filter:contrast(1.08) saturate(1.05);
+  animation:jStormIn .45s ease-out forwards;
+}
+#judgement-overlay .j-storm-img.judge{mix-blend-mode:screen;--op:.5}
+#judgement-overlay .j-storm-img.ball{--op:.68}
+#judgement-overlay .j-rows{
+  position:absolute;z-index:2;inset:-4%;display:flex;flex-direction:column;justify-content:space-around;
+  gap:1.2vh;overflow:hidden;opacity:.34;transform:rotate(-2deg) scale(1.04);
+}
+#judgement-overlay .j-row{
+  width:100%;height:18.4%;display:flex;align-items:center;overflow:hidden;
+}
+#judgement-overlay .j-track{
+  display:flex;align-items:center;gap:1.4vw;width:max-content;will-change:transform;
+  animation:jRowLeft 24s linear infinite;
+}
+#judgement-overlay .j-row.right .j-track{
+  animation:jRowRight 31s linear infinite;
+}
+#judgement-overlay .j-cell{position:relative;display:grid;place-items:center;flex:0 0 auto;animation:jCellPulse 1.6s ease-in-out infinite}
+#judgement-overlay .j-cell img{width:min(8.2vw,9.6vh);height:min(8.2vw,9.6vh);object-fit:contain;filter:grayscale(.15) contrast(1.1)}
+#judgement-overlay .j-cell b{
+  display:grid;place-items:center;font-size:min(7.4vw,8.8vh);line-height:1;color:#f0ce75;
+  text-shadow:0 0 18px rgba(232,198,97,.75);font-family:"Segoe UI Emoji","Apple Color Emoji",sans-serif;
+}
+#judgement-overlay .j-echoes{position:absolute;z-index:5;inset:0;overflow:hidden}
+#judgement-overlay .j-echo{
+  position:absolute;left:var(--x);top:var(--y);font-size:var(--s);font-weight:800;
+  color:#e5c35b;letter-spacing:.12em;opacity:0;white-space:nowrap;
+  transform:translate(-50%,-50%) rotate(var(--r));text-shadow:0 0 12px rgba(210,160,40,.55);
+  animation:jEchoIn 3.8s ease-in-out var(--d) infinite;
+}
+#judgement-overlay .j-center{
+  position:absolute;z-index:6;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:4vh 4vw;pointer-events:none;
+}
+#judgement-overlay .j-kicker{
+  margin:0 0 1.4vh;font-size:clamp(.65rem,1.4vw,1rem);letter-spacing:.55em;
+  color:rgba(232,198,97,.62);font-family:var(--display,sans-serif)
+}
+#judgement-overlay .j-title{
+  margin:0;font-size:clamp(2.4rem,9vw,7rem);line-height:1.12;letter-spacing:.1em;font-weight:900;
+  color:#e8c661;text-shadow:0 0 10px rgba(255,220,120,.8),0 0 40px rgba(190,130,20,.55),4px 5px 0 #3a2504;
+  animation:jTextShake .09s infinite;
+}
+#judgement-overlay .j-sub{
+  margin:2.2vh 0 0;font-size:clamp(.8rem,1.6vw,1.2rem);letter-spacing:.3em;
+  color:rgba(232,198,97,.7);animation:jTextShake .13s infinite reverse;
+}
+#judgement-overlay .j-scare{
+  position:absolute;inset:0;display:none;place-items:center;z-index:8;background:transparent;
+}
+#judgement-overlay.scare .j-scare{display:grid}
+#judgement-overlay .j-scare img{
+  width:min(78vw,74vh);max-height:78vh;object-fit:contain;
+  filter:contrast(1.05) saturate(.95) drop-shadow(0 0 42px rgba(232,198,97,.35));
+  -webkit-mask-image:radial-gradient(ellipse at center,#000 58%,rgba(0,0,0,.8) 72%,transparent 92%);
+  mask-image:radial-gradient(ellipse at center,#000 58%,rgba(0,0,0,.8) 72%,transparent 92%);
+  transform-origin:50% 20%;
+  animation:jScareZoom 5s linear both;
+}
+#judgement-overlay .j-flash{
+  position:absolute;inset:0;z-index:12;background:#fff;opacity:0;pointer-events:none;
+  transition:opacity .55s ease-in-out;
+}
+#judgement-overlay.flash .j-flash{opacity:1}
+#judgement-overlay.scare .j-rows,
+#judgement-overlay.scare .j-echoes,
+#judgement-overlay.scare .j-center{visibility:hidden}
+#judgement-overlay.reduce-motion{animation:none}
+#judgement-overlay.reduce-motion .j-echo,
+#judgement-overlay.reduce-motion .j-title,
+#judgement-overlay.reduce-motion .j-sub,
+#judgement-overlay.reduce-motion .j-cell,
+#judgement-overlay.reduce-motion .j-track,
+#judgement-overlay.reduce-motion .j-storm-img{animation:none}
+
+/* 主页合成大鲁卡图标点击抖动 */
+.card-emblem.suika-emblem{cursor:pointer;position:relative;transition:transform .12s}
+.card-emblem.suika-emblem:hover{transform:scale(1.04)}
+.card-emblem.suika-emblem.shake{animation:emblemShake .42s ease-in-out}
+@keyframes emblemShake{
+  0%,100%{transform:translate(0,0) rotate(0)}
+  15%{transform:translate(-4px,1px) rotate(-3deg)}
+  30%{transform:translate(5px,-2px) rotate(3deg)}
+  45%{transform:translate(-4px,2px) rotate(-2deg)}
+  60%{transform:translate(4px,-1px) rotate(2deg)}
+  75%{transform:translate(-2px,1px) rotate(-1deg)}
+}
+@keyframes jScreenShake{
+  0%,100%{transform:translate(0,0)}
+  20%{transform:translate(-5px,3px)}
+  40%{transform:translate(4px,-4px)}
+  60%{transform:translate(-3px,-2px)}
+  80%{transform:translate(3px,4px)}
+}
+@keyframes jTextShake{
+  0%,100%{transform:translate(0,0)}
+  25%{transform:translate(-1px,1px)}
+  50%{transform:translate(1px,-1px)}
+  75%{transform:translate(-1px,-1px)}
+}
+@keyframes jCellPulse{
+  0%,100%{transform:scale(1);opacity:.8}
+  50%{transform:scale(1.04);opacity:1}
+}
+@keyframes jStormIn{
+  from{opacity:0;transform:translate(-50%,-50%) rotate(var(--r)) scale(.7)}
+  to{opacity:var(--op,.6);transform:translate(-50%,-50%) rotate(var(--r)) scale(1)}
+}
+@keyframes jScareZoom{
+  from{transform:translateY(30%) scale(.82)}
+  to{transform:translateY(30%) scale(3.6)}
+}
+@keyframes jRowLeft{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+@keyframes jRowRight{
+  from{transform:translateX(-50%)}
+  to{transform:translateX(0)}
+}
+@keyframes jEchoIn{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.72) rotate(var(--r))}
+  12%{opacity:.5}
+  32%{opacity:.28}
+  62%{opacity:.12}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.06) rotate(var(--r))}
+}
+@media (max-width:640px){
+  #judgement-overlay .j-cell img{width:10vw;height:10vw}
+  #judgement-overlay .j-cell b{font-size:9vw}
+  #judgement-overlay .j-track{gap:4vw}
+}

@@ -1,0 +1,21 @@
+﻿# .gitignore
+# 发布包与原始素材
+/dist/
+/BGM/
+*.rar
+*.apk
+*.zip
+
+# 本地配置/密钥
+/tools/image-api.local.json
+/tools/*.local.json
+
+# 临时与测试
+_*/
+_tmp/
+__pycache__/
+*.pyc
+
+# 系统文件
+.DS_Store
+Thumbs.db

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#7fd7ff">
+  <title>同人小游戏合集 · 圣魔大战</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23c9463a'/%3E%3Cpath d='M12 34c8-10 20-12 30-6 4 2 7 5 9 8-2 3-5 6-9 8-10 6-22 4-30-6Z' fill='%23f6e7c9'/%3E%3Ccircle cx='42' cy='31' r='2.4' fill='%23111'/%3E%3Cpath d='M12 34 4 24v20Z' fill='%23f6e7c9'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/base.css?v=20261123">
+  <link rel="stylesheet" href="css/games.css?v=20261123">
+  <link rel="stylesheet" href="css/judgement.css?v=20261123">
+  <link rel="stylesheet" href="css/arena.css?v=20261123">
+  <link rel="stylesheet" href="css/memory.css?v=20261123">
+  <link rel="stylesheet" href="css/achievements.css?v=20261123">
+</head>
+<body class="in-splash">
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="aurora" aria-hidden="true"></div>
+
+  <header class="topbar" id="topbar">
+    <button class="brand" data-go="home" aria-label="回到主页">
+      <span class="brand-seal">游</span>
+      <span class="brand-text">
+        <strong>同人小游戏</strong>
+        <small>MINI GAME ARCADE</small>
+      </span>
+    </button>
+    <div class="top-actions">
+      <button class="icon-btn" id="btn-music" aria-label="音乐开关" title="音乐开关">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v11"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="15" r="2.5"/></svg>
+        <span class="slash"></span>
+      </button>
+      <button class="icon-btn" id="btn-sfx" aria-label="音效开关" title="音效开关">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>
+        <span class="slash"></span>
+      </button>
+      <button class="icon-btn" id="btn-fullscreen" aria-label="全屏" title="全屏">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="screens">
+    <!-- 开场：整张标题图 + 闪动字幕 -->
+    <section class="screen screen-title active" id="screen-title" aria-label="开场">
+      <div class="splash" id="splash">
+        <img class="splash-image" src="img/System/title.jpg" alt="同人小游戏合集 标题图">
+        <div class="splash-shade"></div>
+        <div class="splash-bottom">
+          <p class="splash-prompt" id="splash-prompt">按任意键开场</p>
+          <p class="splash-sub">CLICK OR PRESS ANY KEY</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 主页：左侧两列游戏列表，右侧随机棋子展示，下方设置 -->
+    <section class="screen screen-home" id="screen-home" aria-label="主页">
+      <div class="home-layout">
+        <div class="home-main">
+          <div class="home-head">
+            <p class="eyebrow"><span class="eyebrow-line"></span>MAIN MENU</p>
+            <h1>同人小游戏合集</h1>
+            <p>挑一个游戏，或者看看今天翻到哪一枚棋子。</p>
+          </div>
+
+          <div class="game-grid home-game-grid" id="game-grid"></div>
+
+          <div class="home-settings">
+            <div class="home-settings-head">
+              <div><p class="kicker">SETTINGS</p><h2>设置</h2></div>
+              <span class="home-settings-note">不需要再打开弹窗</span>
+            </div>
+            <div class="home-setting-grid">
+              <div class="home-setting">
+                <div><strong>背景音乐</strong><small>主页 / 对局 / 猜角色</small></div>
+                <button class="switch" id="opt-music" role="switch" aria-checked="true"><span></span></button>
+              </div>
+              <div class="home-setting">
+                <div><strong>游戏音效</strong><small>落子、合成、答对</small></div>
+                <button class="switch" id="opt-sfx" role="switch" aria-checked="true"><span></span></button>
+              </div>
+              <div class="home-setting">
+                <div><strong>界面动效</strong><small>关闭后更安静</small></div>
+                <button class="switch" id="opt-motion" role="switch" aria-checked="true"><span></span></button>
+              </div>
+              <div class="home-setting">
+                <div><strong>默认棋力</strong><small>开局时还能改</small></div>
+                <div class="segmented compact" id="opt-ai">
+                  <button data-value="easy">轻松</button>
+                  <button data-value="normal">普通</button>
+                  <button data-value="hard">困难</button>
+                </div>
+              </div>
+              <div class="home-setting wide">
+                <div><strong>圣魔大战棋子样式</strong><small>立绘 / 符号</small></div>
+                <div class="segmented compact" id="opt-pieces">
+                  <button data-value="art">立绘</button>
+                  <button data-value="glyph">符号</button>
+                </div>
+              </div>
+            </div>
+            <div class="home-tools">
+              <button class="mini-btn" id="opt-reset">清除游戏记录</button>
+              <button class="mini-btn danger" id="home-quit">退出游戏</button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="home-showcase" aria-label="随机棋子">
+          <div class="showcase-card">
+            <div class="showcase-head">
+              <div><p class="kicker">RANDOM PIECE</p><span>今天翻到的是</span></div>
+              <button class="mini-btn" id="showcase-next">换一个</button>
+            </div>
+            <div class="showcase-art" id="showcase-art"></div>
+            <div class="showcase-copy">
+              <strong id="showcase-name">——</strong>
+              <small id="showcase-role">——</small>
+            </div>
+          </div>
+          <div class="showcase-foot">
+            <span>随机翻到的一枚棋子。</span>
+          </div>
+          <div class="home-ach-entry">
+            <div class="home-ach-entry-icon">✦</div>
+            <div class="home-ach-entry-copy">
+              <p>ACHIEVEMENTS · 成就</p>
+              <strong>旅程记录</strong>
+              <small>已解锁 <b id="home-ach-count">0 / 25</b> · 点开查看细则</small>
+            </div>
+            <button class="home-ach-entry-btn" id="home-achievements" type="button">查看成就</button>
+          </div>
+        </aside>
+      </div>
+      <footer class="home-footer">
+        <span>© 同人小游戏合集</span>
+        <span>～ 一条大肥鱼的私藏 ～</span>
+        <span>v1.2</span>
+      </footer>
+    </section>
+
+    <!-- 游戏 -->
+    <section class="screen screen-game" id="screen-game" aria-label="游戏">
+      <div class="game-head">
+        <button class="back-link" id="game-back">← 主页</button>
+        <div class="game-head-title">
+          <span class="game-head-dot"></span>
+          <div>
+            <h2 id="game-title">游戏</h2>
+            <p id="game-subtitle">……</p>
+          </div>
+        </div>
+        <div class="game-head-actions">
+          <button class="icon-btn small" id="game-music" aria-label="音乐开关" title="音乐开关">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v11"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="15" r="2.5"/></svg>
+            <span class="slash"></span>
+          </button>
+          <button class="icon-btn small" id="game-sfx" aria-label="音效开关" title="音效开关">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>
+            <span class="slash"></span>
+          </button>
+          <button class="text-btn" id="game-restart">重开</button>
+          <button class="text-btn" id="game-pause">暂停</button>
+        </div>
+      </div>
+      <div class="game-setup" id="game-setup" hidden></div>
+      <div class="game-mount" id="game-mount"></div>
+    </section>
+  </main>
+
+  <!-- 暂停 -->
+  <div class="modal" id="modal-pause" hidden>
+    <div class="modal-backdrop" data-close="pause"></div>
+    <div class="modal-panel pause-panel" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <p class="eyebrow"><span class="eyebrow-line"></span>PAUSED</p>
+      <h2 id="pause-title">先歇一会儿</h2>
+      <p class="pause-copy">棋盘不会跑，西瓜也不会烂。</p>
+      <div class="pause-actions">
+        <button class="btn primary" data-pause="resume">继续游戏</button>
+        <button class="btn" data-pause="restart">重新开始</button>
+        <button class="btn ghost danger" data-pause="exit">返回主页</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 退出 -->
+  <div class="modal" id="modal-quit" hidden>
+    <div class="modal-backdrop" data-close="quit"></div>
+    <div class="modal-panel quit-panel" role="dialog" aria-modal="true" aria-labelledby="quit-title">
+      <div class="quit-fish" aria-hidden="true">&gt;&lt;(((°&gt;</div>
+      <h2 id="quit-title">这就要走了吗？</h2>
+      <p>棋盘还没收，西瓜还没合出来。<br>要不再坐五分钟？</p>
+      <div class="pause-actions">
+        <button class="btn primary" data-quit="stay">再玩一会儿</button>
+        <button class="btn ghost" data-quit="leave">确认退出</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="farewell" id="farewell" hidden>
+    <div class="farewell-inner">
+      <div class="farewell-fish" aria-hidden="true">～<span class="fish-body">&gt;&lt;(((°&gt;</span>～</div>
+      <p class="eyebrow">THANKS FOR PLAYING</p>
+      <h2>多谢款待</h2>
+      <p class="farewell-copy">本店打烊了。窗口要是关不掉，就点右上角那个小叉吧。</p>
+      <button class="btn primary" id="farewell-back">再开一会儿</button>
+      <p class="farewell-small">同人小游戏合集 · 圣魔大战</p>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+  <script src="js/core.js?v=20261123"></script>
+  <script src="js/achievements.js?v=20261123"></script>
+  <script src="js/factions.js?v=20261123"></script>
+  <script src="js/guess-data.js?v=20261123"></script>
+  <script src="js/default-names.js?v=20261123"></script>
+  <script src="js/piece-db.js?v=20261123"></script>
+  <script src="vendor/xqwlight/position.js"></script>
+  <script src="vendor/xqwlight/search.js"></script>
+  <script src="vendor/xqwlight/engine.js"></script>
+  <script src="js/game-cchess.js?v=20261123"></script>
+  <script src="vendor/jschess/js-chess-engine.js"></script>
+  <script src="js/jschess-ai.js?v=20261123"></script>
+  <script src="js/stockfish-ai.js?v=20261123"></script>
+  <script src="js/game-chess.js?v=20261123"></script>
+  <script src="js/game-suika.js?v=20261123"></script>
+  <script src="js/game-monster.js?v=20261123"></script>
+  <script src="js/game-arena.js?v=20261123"></script>
+  <script src="js/game-memory.js?v=20261123"></script>
+  <script src="js/judgement.js?v=20261123"></script>
+  <script src="js/app.js?v=20261123"></script>
+</body>
+</html>

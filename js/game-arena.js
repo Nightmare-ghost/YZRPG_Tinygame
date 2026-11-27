@@ -307,6 +307,9 @@
       if (p.id === "ruka-2-2") st.attack = "none";
       if (p.id === "chaos-2-2") st.attack = "none";
       if (p.id === "ruka-4-2") st.attack = "none";
+      if (p.id === "chaos-5-1") {
+        st.skill = "不存在的第四使徒——时不时进入虚化状态（透明度减半），期间不受到伤害、不被碰撞推开，但会对接触的敌人造成碰撞伤害（dot伤害除外）。";
+      }
       if (p.id === "red-5-1") {
         st.attack = "none";
         st.skill = "天界决战兵器——最大生命提高 50%，每秒流失 1 点；每 2.5 秒向八方向发射伤害 10 的光弹，每 2 秒发射伤害 10 的激光。";
@@ -342,7 +345,7 @@
         hold: 0, dash: 0, dashHit: false, slow: 0,
         wither: 0, witherTick: 0, grudge: 0, atkBuff: 1, atkNerf: 1, noDamageDealt: 0,
         collisionLock: 0, clubAngle: Math.random() * Math.PI * 2, clubCd: 0,
-        phaseTimer: 0, marchTimer: 0, marchCharge: 0, marchAngle: 0,
+        phaseTimer: 0, phaseActive: false, marchTimer: 0, marchCharge: 0, marchAngle: 0,
         gimmickAtk: 0, idiaPhase: 0, idiaTimer: 0, idiaAngle: 0, bladeAura: 0,
         spinTimer: 0, spinAngle: 0, spinUntil: 0, spinStart: 0,
         urielBurst: p.id === "red-5-1" ? 2.5 : 0, urielLaser: p.id === "red-5-1" ? 2 : 0,
@@ -1180,9 +1183,13 @@
           f.phaseTimer = 9;
           f.invincible = Math.max(f.invincible, 2);
           f.noDamageDealt = Math.max(f.noDamageDealt, 2);
+          f.phaseActive = true;
           state.effects.push({ x: f.x, y: f.y - f.radius - 20, text: "虚化", life: 1, color: "#cfe6ff" });
         }
-        if (f.noDamageDealt > 0) f.noDamageDealt = Math.max(0, f.noDamageDealt - dt);
+        if (f.noDamageDealt > 0) {
+          f.noDamageDealt = Math.max(0, f.noDamageDealt - dt);
+          if (f.noDamageDealt <= 0) f.phaseActive = false;
+        }
       } else if (id === "ruka-4-1") {
         f.phaseTimer -= dt;
         if (f.phaseTimer <= 0) {
@@ -1244,7 +1251,7 @@
         }
         f.skillCd = 2.2;
       } else if (id === "chaos-3-2") {
-        spawnShots(f, o, { count: 1, aim: "current", damage: Math.max(2, Math.round(dmg * 0.55)), speed: 260, shape: "circle", r: 13, range: 620, rabbit: true });
+        spawnShots(f, o, { count: 1, aim: "current", damage: Math.max(2, Math.round(dmg * 0.55)), speed: 260, shape: "rabbit", r: 13, range: 620, rabbit: true });
         f.skillCd = 5;
       } else if (id === "chaos-2-1") {
         spawnShots(f, o, { count: 3, aim: "current", damage: Math.max(2, Math.round(dmg * 0.275)), speed: 320, shape: "scythe", range: 280 });
@@ -1326,7 +1333,7 @@
           f.merged = true; f.dmgBoost = 1.25; f.invincible = Math.max(f.invincible, 1);
           spawnBeams(f, o, { count: 1, aim: "current", damage: Math.max(5, dmg), range: 760 });
         } else {
-          spawnShots(f, o, { count: 2, aim: "current", damage: Math.max(2, Math.round(dmg * 0.45)), speed: 330, shape: "needle", range: 560 });
+          spawnShots(f, o, { count: 2, aim: "current", damage: Math.max(2, Math.round(dmg * 0.45)), speed: 330, shape: "arrow", range: 560 });
         }
         f.skillCd = 2.6;
       } else if (id === "red-7-3") {
@@ -1352,7 +1359,7 @@
       } else if (id === "black-4-1") {
         const a = Math.atan2(o.y - f.y, o.x - f.x);
         f.dash = 0.28; f.dashHit = false; f.vx = Math.cos(a) * 720; f.vy = Math.sin(a) * 720; f.collCd = 0;
-        if (Math.random() < 0.55) spawnShots(f, o, { count: 1, aim: "current", damage: Math.max(2, Math.round(dmg * 0.5)), speed: 240, shape: "circle", range: 560, status: { control: 2 } });
+        if (Math.random() < 0.55) spawnShots(f, o, { count: 1, aim: "current", damage: Math.max(2, Math.round(dmg * 0.5)), speed: 240, shape: "heart", r: 11, range: 560, status: { control: 2 } });
         f.skillCd = 4.5;
       } else if (id === "black-5-1") {
         spawnTrapAt(f, o, f.x, f.y, { damage: 4, radius: 38, delay: 0.2, status: { burn: 3 } });
@@ -1363,7 +1370,7 @@
           spawnTrapAt(f, o, o.x, o.y, { damage: Math.max(3, dmg), radius: 48, delay: 0.4 });
         } else {
           const status = el === "wind" ? { reverse: true, slow: 3 } : el === "water" ? { water: 5 } : el === "fire" ? { burn: 5 } : el === "ice" ? { freeze: 1.4 } : { paralyze: 1.4 };
-          spawnShots(f, o, { count: 1, aim: "current", damage: Math.max(2, Math.round(dmg * 0.55)), speed: 360, shape: "circle", range: 650, status });
+          spawnShots(f, o, { count: 1, aim: "current", damage: Math.max(2, Math.round(dmg * 0.55)), speed: 360, shape: "yinYang", r: 12, range: 650, status });
         }
         spawnBeams(f, o, { count: 1, aim: "current", damage: Math.max(2, Math.round(dmg * 0.35)), range: 620 });
         f.skillCd = 2.8;
@@ -1665,6 +1672,7 @@
     }
 
     function collisionPower(f) {
+      if (f.p.id === "chaos-5-1" && f.phaseActive) return Math.max(10, Math.round(f.stats.damage * 0.85));
       if (f.noDamageDealt > 0 || f.p.id === "chaos-6-1") return 0;
       const isUnit = !f.isAlly || f.teammate;
       let v = isUnit ? Math.max(2, f.stats.damage * 0.52) : (f.damage || 8);
@@ -1747,6 +1755,23 @@
       const d = dist(a.x, a.y, b.x, b.y);
       const min = a.radius + b.radius;
       if (d < min && d > 0.001) {
+        const phaseA = a.p.id === "chaos-5-1" && a.phaseActive;
+        const phaseB = b.p.id === "chaos-5-1" && b.phaseActive;
+        if (phaseA || phaseB) {
+          if (a.collCd <= 0 && b.collCd <= 0 && state.phase === "fight") {
+            a.collCd = b.collCd = 0.48;
+            if (phaseA) {
+              damage(b, collisionPower(a), "#e8d8ff", a);
+              state.effects.push({ x: b.x, y: b.y - b.radius - 12, text: "虚化撞击", life: 0.8, color: "#e8d8ff" });
+            }
+            if (phaseB) {
+              damage(a, collisionPower(b), "#e8d8ff", b);
+              state.effects.push({ x: a.x, y: a.y - a.radius - 12, text: "虚化撞击", life: 0.8, color: "#e8d8ff" });
+            }
+            audio.sfx("capture");
+          }
+          return;
+        }
         const nx = (b.x - a.x) / d, ny = (b.y - a.y) / d;
         const overlap = min - d;
         if (a.immobile && !b.immobile) { b.x += nx * overlap; b.y += ny * overlap; }
@@ -2002,6 +2027,56 @@
           ctx.strokeStyle = "#9fe0ff"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-28, 0); ctx.lineTo(22, 0); ctx.stroke();
           ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-24, 0); ctx.lineTo(20, 0); ctx.stroke();
           ctx.strokeStyle = "#ffe0a0"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(4, -8); ctx.lineTo(4, 8); ctx.stroke();
+          ctx.restore();
+        } else if (p.shape === "rabbit") {
+          const a = Math.atan2(p.vy, p.vx);
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(a);
+          ctx.shadowBlur = 20;
+          // 兔子头弹：两只耳朵 + 圆头 + 红眼
+          ctx.fillStyle = "#f7f2ff";
+          ctx.beginPath(); ctx.ellipse(-5, -10, 5, 13, -0.35, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(6, -10, 5, 13, 0.35, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#ffd6e8";
+          ctx.beginPath(); ctx.ellipse(-5, -11, 2, 8, -0.35, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(6, -11, 2, 8, 0.35, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath(); ctx.arc(0, 2, 14, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#d94d6b";
+          ctx.beginPath(); ctx.arc(-5, 0, 2.6, 0, Math.PI * 2); ctx.arc(5, 0, 2.6, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#9c6b8a";
+          ctx.beginPath(); ctx.arc(0, 7, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        } else if (p.shape === "yinYang") {
+          const t = performance.now() / 260;
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(t);
+          ctx.shadowBlur = 16;
+          ctx.fillStyle = "#f6f1ff"; ctx.beginPath(); ctx.arc(0, 0, p.r + 2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#17101f"; ctx.beginPath(); ctx.arc(0, 0, p.r, -Math.PI / 2, Math.PI / 2); ctx.arc(0, 0, p.r / 2, Math.PI / 2, -Math.PI / 2, true); ctx.fill();
+          ctx.fillStyle = "#f6f1ff"; ctx.beginPath(); ctx.arc(0, 0, p.r / 2, -Math.PI / 2, Math.PI / 2); ctx.arc(0, 0, p.r, Math.PI / 2, -Math.PI / 2, true); ctx.fill();
+          ctx.fillStyle = "#17101f"; ctx.beginPath(); ctx.arc(0, -p.r / 2, p.r * 0.18, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#f6f1ff"; ctx.beginPath(); ctx.arc(0, p.r / 2, p.r * 0.18, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        } else if (p.shape === "heart") {
+          const a = Math.atan2(p.vy, p.vx);
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(a);
+          ctx.shadowBlur = 18; ctx.fillStyle = "#ff6b9d";
+          ctx.beginPath();
+          ctx.moveTo(0, 8);
+          ctx.bezierCurveTo(-18, -4, -11, -18, 0, -7);
+          ctx.bezierCurveTo(11, -18, 18, -4, 0, 8);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "rgba(255,255,255,.75)";
+          ctx.beginPath(); ctx.arc(-4, -5, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        } else if (p.shape === "arrow") {
+          const a = Math.atan2(p.vy, p.vx);
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(a);
+          ctx.strokeStyle = "#ffe6a0"; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(-22, 0); ctx.lineTo(14, 0); ctx.stroke();
+          ctx.fillStyle = "#fff2c0";
+          ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(10, -7); ctx.lineTo(10, 7); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = "#ffcf7a"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(-16, -7); ctx.lineTo(-9, 0); ctx.lineTo(-16, 7); ctx.stroke();
           ctx.restore();
         } else if (p.shape === "needle") {
           const a = Math.atan2(p.vy, p.vx);

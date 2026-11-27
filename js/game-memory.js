@@ -13,7 +13,7 @@
     hard: { pairs: 18, label: "困难", hint: "18 对 · 36 张", cols: 9 }
   };
   const MODES = {
-    practice: { label: "练习", hint: "熟悉牌面，慢慢记", desc: "不追求排名，先把 36 枚棋子认全。" },
+    practice: { label: "练习", hint: "熟悉牌面，慢慢记", desc: "不追求排名，先把牌面认全。" },
     race: { label: "竞速", hint: "从第一张开始计时", desc: "同一副牌，用更短的时间清空牌桌。" },
     battle: { label: "对战", hint: "与全知者轮流配对", desc: "配对得分并继续，失败换人；她知道所有亮过的牌。" }
   };
@@ -45,6 +45,8 @@
     const out = [];
     for (const f of factions) {
       for (const [type, slot] of pieces) {
+        // 祸抚的 3-1 / 3-2 共用同一张立绘，牌库里只保留一张，避免同图分身。
+        if (f.key === "black" && type === 3 && slot === 2) continue;
         const art = db.chessArt(f.side, type, slot, f.key);
         if (!art) continue;
         const fullName = db.chessName(f.side, type, slot, f.key);

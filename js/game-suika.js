@@ -8,7 +8,7 @@
 
   const W = 480, H = 720;
   const LEFT = 18, RIGHT = 462, FLOOR = 704, DROP_Y = 78, DANGER_Y = 150;
-  const BOWL = 48;
+  const BOWL = 72;
   const CX = W / 2, HALF = (RIGHT - LEFT) / 2;
   const BOWL_R = (HALF * HALF + BOWL * BOWL) / (2 * BOWL);
   const BOWL_CY = FLOOR - BOWL_R;
@@ -57,6 +57,7 @@
     }
   };
   const SPECIAL_KEYS = Object.keys(SPECIALS);
+  const SPECIAL_WEIGHTS = { promestein: 2, hiruko: 2, eva: 1 };
 
   function weightedTier() {
     const total = DROP_WEIGHTS.reduce((a, b) => a + b, 0);
@@ -69,7 +70,13 @@
   }
 
   function randomSpecialKey() {
-    return SPECIAL_KEYS[Math.floor(Math.random() * SPECIAL_KEYS.length)];
+    const total = SPECIAL_KEYS.reduce((n, key) => n + (SPECIAL_WEIGHTS[key] || 0), 0);
+    let n = Math.random() * total;
+    for (const key of SPECIAL_KEYS) {
+      n -= SPECIAL_WEIGHTS[key] || 0;
+      if (n <= 0) return key;
+    }
+    return "promestein";
   }
 
   function mount(root, api) {
@@ -100,7 +107,7 @@
       elapsed: 0
     };
     let raf = 0, last = 0, acc = 0, alive = true;
-    let canvas, ctx, nextCanvas, nextCtx, overlay, comboEl, scoreEl, bestEl, stageEl, modeEl;
+    let canvas, ctx, nextCanvas, nextCtx, overlay, comboEl, scoreEl, bestEl, stageEl, modeEl, cashoutEl;
 
     root.innerHTML =
       '<div class="suika-layout">' +
@@ -111,6 +118,7 @@
               '<div class="suika-score"><small>BEST</small><strong id="suika-best">0</strong></div>' +
             "</div>" +
             '<span class="suika-mode" id="suika-mode">普通模式</span>' +
+            '<button class="mini-btn suika-cashout" id="suika-cashout" type="button">结算</button>' +
             '<div class="suika-next"><small>下一个<br>NEXT</small><canvas id="suika-next" width="92" height="92"></canvas></div>' +
           "</div>" +
           '<div class="suika-stage" id="suika-stage">' +
@@ -125,7 +133,7 @@
           '<div class="suika-panel"><h3>特殊球 <small>SPECIAL</small></h3><div class="suika-special-list" id="suika-special-list"></div></div>' +
           '<div class="suika-panel"><h3>怎么玩 <small>HOW TO</small></h3>' +
             '<p class="suika-help">移动鼠标瞄准，<b>点击投放</b>。手机可以按住拖动，松手投放。<br><br>' +
-            "两个同级鲁卡球碰到一起，就会合成高一级的球。合出 <b>11 级鲁卡</b> 后，可以选择收手结算，或者进入无尽模式继续刷分。<br><br>" +
+            "两个同级鲁卡球碰到一起，就会合成高一级的球。任意时刻都可以点顶部「结算」收手；合出 <b>11 级鲁卡</b> 后还可以进入无尽模式继续刷分。<br><br>" +
             "无尽模式下，两颗 11 级鲁卡相撞会消失并给高分。<br><br>" +
             "<kbd>←</kbd><kbd>→</kbd> 瞄准 · <kbd>空格</kbd> 投放<br>球堆过危险线太久就结束。</p></div>" +
         "</aside>" +
@@ -141,6 +149,8 @@
     bestEl = root.querySelector("#suika-best");
     stageEl = root.querySelector("#suika-stage");
     modeEl = root.querySelector("#suika-mode");
+    cashoutEl = root.querySelector("#suika-cashout");
+    if (cashoutEl) cashoutEl.addEventListener("click", () => settleGame(false));
 
     const ballImages = {};
     for (let i = 0; i < 11; i++) {
@@ -345,6 +355,10 @@
       state.popups.push({ x, y, text, color: color || "#ffe6a8", life: 0, max: 0.9 });
     }
 
+    function bumpMaxTier(tier) {
+      if (tier > state.maxTier) state.maxTier = tier;
+    }
+
     function mergeFruits(a, b) {
       const tier = Math.max(a.tier, b.tier);
       const nx = (a.x + b.x) / 2, ny = (a.y + b.y) / 2;
@@ -366,9 +380,9 @@
           angle: (a.angle + b.angle) / 2, spin: util.rand(-0.3, 0.3),
           age: 0, mergeLock: 0.13, scale: 0.55, dead: false
         });
-        state.maxTier = Math.max(state.maxTier, newTier);
+        bumpMaxTier(newTier);
       } else {
-        state.maxTier = 10;
+        bumpMaxTier(10);
       }
 
       if (YZ.achievements) {
@@ -415,24 +429,30 @@
     }
 
     function finishAtMax() {
-      if (state.over) return;
+      settleGame(true);
+    }
+
+    function settleGame(allowEndless) {
+      if (!state.started || state.over) return;
       state.choiceOpen = false;
       state.over = true;
       if (state.score > state.best) state.best = state.score;
       persist();
       updateHud();
       overlay.hidden = false;
-      overlay.innerHTML = '<div class="overlay-card"><p class="kicker">COMPLETE</p>' +
-        "<h3>完美收手</h3>" +
-        '<p class="ov-sub">这一局合到了 <b style="color:var(--gold)">11 级鲁卡</b>。<br>再多待一会儿，也许还能更高。</p>' +
+      const topTier = Math.max(0, state.maxTier);
+      const canEndless = allowEndless && topTier >= 10;
+      overlay.innerHTML = '<div class="overlay-card"><p class="kicker">CASH OUT</p>' +
+        "<h3>收手结算</h3>" +
+        '<p class="ov-sub">这一局合到了 <b style="color:var(--gold)">' + util.escapeHtml(levelName(topTier)) + "</b>。<br>本场最高记录会保留，不会因为之后的合成或特殊球而降低。</p>" +
         '<div class="ov-stats"><div><span>本局</span><strong>' + util.formatNum(state.score) + "</strong></div>" +
-        "<div><span>最高</span><strong>" + util.formatNum(state.best) + "</strong></div>" +
-        "<div><span>最大</span><strong>Lv.11</strong></div></div>" +
+        "<div><span>最高分</span><strong>" + util.formatNum(state.best) + "</strong></div>" +
+        "<div><span>本场最高</span><strong style=\"font-size:18px\">" + util.escapeHtml(levelName(topTier)) + "</strong></div></div>" +
         '<div class="ov-actions"><button class="btn primary" id="suika-again">再来一局</button>' +
-        '<button class="btn" id="suika-endless2">继续无尽</button>' +
+        (canEndless ? '<button class="btn" id="suika-endless2">进入无尽模式</button>' : '') +
         '<button class="btn ghost" id="suika-exit">返回主页</button></div></div>';
       overlay.querySelector("#suika-again").addEventListener("click", restart);
-      overlay.querySelector("#suika-endless2").addEventListener("click", enterEndless);
+      if (canEndless) overlay.querySelector("#suika-endless2").addEventListener("click", enterEndless);
       overlay.querySelector("#suika-exit").addEventListener("click", api.onExit);
       audio.sfx("win");
     }
@@ -460,6 +480,8 @@
         if (target.tier < 10) {
           target.tier += 1;
           target.r = BALLS[target.tier].r;
+          bumpMaxTier(target.tier);
+          if (target.tier === 10 && !state.maxOffered) offerMaxChoice();
           target.mergeLock = 0.2;
           target.scale = 0.62;
           state.score += 20;
@@ -506,19 +528,20 @@
         f.x += f.vx * dt;
         f.y += f.vy * dt;
         f.angle += f.spin * dt;
-        f.spin *= 0.995;
+        f.spin *= Math.pow(0.18, dt);
+        if (Math.abs(f.spin) < 0.01) f.spin = 0;
       }
       // 墙 / 地面
       for (const f of state.fruits) {
         if (f.x - f.r < LEFT) {
           f.x = LEFT + f.r;
           if (f.vx < 0) f.vx = -f.vx * 0.16;
-          f.spin += 0.05;
+          f.spin *= 0.45;
         }
         if (f.x + f.r > RIGHT) {
           f.x = RIGHT - f.r;
           if (f.vx > 0) f.vx = -f.vx * 0.16;
-          f.spin -= 0.05;
+          f.spin *= 0.45;
         }
         const fy = floorAt(f.x);
         if (f.y + f.r > fy) {
@@ -527,7 +550,8 @@
           else f.vy = 0;
           f.vx *= 0.94;
           f.vx += (CX - f.x) * 7.5 * dt;
-          f.spin *= 0.9;
+          f.spin *= 0.82;
+          if (Math.abs(f.spin) < 0.01) f.spin = 0;
         }
       }
       // 碰撞
@@ -774,6 +798,7 @@
     function updateMode() {
       if (!modeEl) return;
       modeEl.textContent = state.endless ? "无尽模式" : (state.over ? "本局结束" : "普通模式");
+      if (cashoutEl) cashoutEl.disabled = !state.started || state.over;
       modeEl.classList.toggle("endless", state.endless);
     }
 
@@ -1011,7 +1036,7 @@
     kicker: "益智 · RUKA",
     title: "合成大鲁卡",
     subtitle: "11 级鲁卡，合到顶再说",
-    desc: "投放、碰撞、升级。11 个形态各异的鲁卡球，两个同级鲁卡球相撞就升级；合到 11 级后可以收手结算，或进入无尽模式继续。",
+    desc: "投放、碰撞、升级。11 个形态各异的鲁卡球，两个同级鲁卡球相撞就升级；任意时刻都能结算，合到 11 级后还可进入无尽模式继续。",
     emblem: '<img class="suika-card-icon" src="img/ball/icon-1.png" alt="合成大鲁卡">',
     mount,
     cardStat() {

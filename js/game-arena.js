@@ -307,8 +307,34 @@
       if (p.id === "ruka-2-2") st.attack = "none";
       if (p.id === "chaos-2-2") st.attack = "none";
       if (p.id === "ruka-4-2") st.attack = "none";
+      if (p.id === "red-1-1") st.attack = "none";
+      if (p.id === "red-2-2") st.attack = "none";
+      if (p.id === "black-2-1") st.attack = "none";
+      if (p.id === "black-4-1") st.attack = "none";
+      if (p.id === "red-6-1") st.skill = "不动的律法裁决——始终不移动；每 0.5 秒发射两枚伤害减半的针弹。";
       if (p.id === "chaos-5-1") {
-        st.skill = "不存在的第四使徒——时不时进入虚化状态（透明度减半），期间不受到伤害、不被碰撞推开，但会对接触的敌人造成碰撞伤害（dot伤害除外）。";
+        st.skill = "不存在的第四使徒——每 9 秒进入 4 秒虚化状态（透明度减半），期间不受到伤害、不被碰撞推开，但会对接触的敌人造成碰撞伤害（dot伤害除外）。";
+      }
+      if (p.id === "black-2-1") {
+        st.skill = "六祖之首——交替使用「俱利伽罗的黑龙」与「阿基里斯之盾」：黑龙造成中伤害并灼烧；盾牌停在原地面向敌人，前方屏障造成碰撞伤害，持续 4 秒或被从背后击中时破裂。";
+      }
+      if (p.id === "black-4-1") {
+        st.skill = "魅拳双绝——平时不移动并蓄势，每秒获得 1 层势（最多 10 层）；敌人进入警戒范围时突进，消耗全部势造成 10 + 2×层数 的碰撞伤害。";
+      }
+      if (p.id === "red-1-1") {
+        st.skill = "普照神民的神光——不发动普通攻击；场上生成两个交叉、旋转并周期变化的十字星，只造成持续伤害、不产生碰撞。";
+      }
+      if (p.id === "red-3-2") {
+        st.skill = "慈爱的圣百合——开局展开覆盖全场的治疗领域，持续整局；所有友方每秒回复 4 点生命，自身每秒额外回复 3 点。";
+      }
+      if (p.id === "black-1-1") {
+        st.skill = "魔界的邪神——生命上限 200，每秒回复 5 点；每 4.5 秒发射一枚缓慢但沉重的紫色射弹。";
+      }
+      if (p.id === "ruka-3-1") {
+        st.skill = "无能淫魔——攻击施加怨念并偷取目标 10% 攻击力；攻击已带怨念的目标时，额外偷取等量层数的生命。";
+      }
+      if (p.id === "red-2-2") {
+        st.skill = "小小神明的奇策——每 2 秒向敌人发射伤害 10 并麻痹的雷电；每 10 秒随机召唤 1 血米卡艾拉酱（10%）、露西菲娜酱（50%），或获得免疫一次伤害的圣光（40%）。";
       }
       if (p.id === "red-5-1") {
         st.attack = "none";
@@ -317,6 +343,7 @@
       if (p.id === "chaos-4-1") { maxHp = 20; st.damage = 20; st.attackDamage = 20; st.radius = 19; }
       if (p.id === "chaos-1-1") { maxHp = 30; st.radius = 26; }
       if (p.id === "red-5-1") maxHp = 150;
+      if (p.id === "black-1-1") maxHp = 200;
       if (p.id === "black-3-1") maxHp = 40;
       if (p.id === "black-5-1") maxHp = 100;
       if (p.id === "black-7-3") maxHp = 80;
@@ -324,9 +351,11 @@
       const angle = Math.random() * Math.PI * 2;
       let speed = Math.max(1, st.speed);
       if (p.id === "red-6-1") speed = 0;
+      if (p.id === "black-4-1") speed = 0;
       return {
         slot, p, side: p.side, stats: st, immobile: p.id === "red-6-1",
         maxHp, hp: maxHp, baseMaxHp: maxHp,
+        noCollision: p.id === "red-1-1",
         x: left ? CX - 100 : CX + 100,
         y: CY + (left ? 1 : -1) * 32,
         homeX: left ? CX - 100 : CX + 100,
@@ -346,6 +375,9 @@
         wither: 0, witherTick: 0, grudge: 0, atkBuff: 1, atkNerf: 1, noDamageDealt: 0,
         collisionLock: 0, clubAngle: Math.random() * Math.PI * 2, clubCd: 0,
         phaseTimer: 0, phaseActive: false, atomCd: 0, atomMerge: 0, marchTimer: 0, marchCharge: 0, marchAngle: 0,
+        chargeTotal: 0, chargeLeft: 0, crossAngle: Math.random() * Math.PI * 2, crossSize: 100, crossCd: 0,
+        smallBolt: 2, smallGift: 10, holyShield: false, fistStacks: 0, fistTimer: 0, fistDash: false, fistDamage: 0,
+        snakeShield: false, snakeShieldTimer: 0, snakeAngle: 0, snakeCd: 2.5, snakeMode: 0,
         gimmickAtk: 0, idiaPhase: 0, idiaTimer: 0, idiaAngle: 0, bladeAura: 0,
         spinTimer: 0, spinAngle: 0, spinUntil: 0, spinStart: 0,
         urielBurst: p.id === "red-5-1" ? 2.5 : 0, urielLaser: p.id === "red-5-1" ? 2 : 0,
@@ -541,6 +573,19 @@
       ];
       state.allies = [];
       state.timeStop = 0; state.timeStopOwner = "";
+      {
+        const a = state.fighters[0], b = state.fighters[1];
+        if (a && b && a.p.id === "black-4-1" && b.p.id !== "black-4-1") {
+          const ang = Math.atan2(a.y - b.y, a.x - b.x) || 0;
+          a.x = clampToArena(b.x + Math.cos(ang) * 76, b.y + Math.sin(ang) * 76, a.radius).x;
+          a.y = clampToArena(b.x + Math.cos(ang) * 76, b.y + Math.sin(ang) * 76, a.radius).y;
+        }
+        if (a && b && b.p.id === "black-4-1" && a.p.id !== "black-4-1") {
+          const ang = Math.atan2(b.y - a.y, b.x - a.x) || 0;
+          b.x = clampToArena(a.x + Math.cos(ang) * 76, a.y + Math.sin(ang) * 76, b.radius).x;
+          b.y = clampToArena(a.x + Math.cos(ang) * 76, a.y + Math.sin(ang) * 76, b.radius).y;
+        }
+      }
       if (state.fighters[0]) spawnChessMinions(state.fighters[0]);
       if (state.fighters[1]) spawnChessMinions(state.fighters[1]);
       if (state.mode === "2v2") {
@@ -552,6 +597,11 @@
       state.traps = [];
       state.clones = [];
       state.heals = [];
+      for (const f of [...state.fighters, ...state.allies]) {
+        if (f && f.p.id === "red-3-2" && f.hp > 0) {
+          state.heals.push({ x: f.x, y: f.y, r: ARENA_R, life: 999, slot: f.slot, rate: 4, persistent: true });
+        }
+      }
       state.effects = [];
       state.roundTime = 0;
       state.timeLeft = ROUND_TIME;
@@ -722,9 +772,14 @@
       if (!source || !target || source === target) return;
       const id = source.p && source.p.id;
       if (id === "ruka-3-1") {
+        const stolen = target.grudge || 0;
         target.atkNerf = (target.atkNerf || 1) * 0.9;
         source.atkBuff = (source.atkBuff || 1) * 1.1;
-        source.grudge = (source.grudge || 0) + 1;
+        target.grudge = (target.grudge || 0) + 1;
+        if (stolen > 0) {
+          source.hp = Math.min(source.maxHp, source.hp + stolen);
+          state.effects.push({ x: source.x, y: source.y - source.radius - 14, text: "怨念吸血 +" + stolen, life: 0.9, color: "#ffc0e0" });
+        }
         state.effects.push({ x: target.x, y: target.y - target.radius - 12, text: "怨念", life: 0.7, color: "#d8a6ff" });
       } else if (id === "chaos-3-1" || id === "chaos-2-1") {
         target.wither = (target.wither || 0) + 1;
@@ -754,6 +809,24 @@
     function damage(f, amount, color, source) {
       if (state.phase !== "fight" || !f || f.hp <= 0) return;
       if (f.permanent) return;
+      if (f.p.id === "black-2-1" && f.snakeShield) {
+        const dx = source ? source.x - f.x : -Math.cos(f.snakeAngle);
+        const dy = source ? source.y - f.y : -Math.sin(f.snakeAngle);
+        const facing = Math.cos(f.snakeAngle) * dx + Math.sin(f.snakeAngle) * dy;
+        if (source && facing > 0) {
+          state.effects.push({ x: f.x, y: f.y - f.radius - 14, text: "盾反", life: 0.8, color: "#ffe6a0" });
+          if (source.hp > 0) damage(source, 8, "#ffd76a", f);
+          return;
+        }
+        f.snakeShield = false;
+        if (f.p.id !== "red-6-1") f.immobile = false;
+        state.effects.push({ x: f.x, y: f.y - f.radius - 14, text: "破盾", life: 0.8, color: "#ff9a8a" });
+      }
+      if (f.holyShield) {
+        f.holyShield = false;
+        state.effects.push({ x: f.x, y: f.y - f.radius - 12, text: "圣光免疫", life: 0.8, color: "#fff8c8" });
+        return;
+      }
       if (f.invincible > 0 || f.star > 0) {
         state.effects.push({ x: f.x, y: f.y - f.radius - 10, text: "免疫", life: 0.7, color: "#cfc2ff" });
         return;
@@ -808,6 +881,7 @@
       f.invincible = Math.max(0, f.invincible - dt);
       f.star = Math.max(0, f.star - dt);
       f.hold = Math.max(0, f.hold - dt);
+      if (f.chargeLeft > 0) f.chargeLeft = Math.max(0, f.chargeLeft - dt);
       f.dash = Math.max(0, f.dash - dt);
       f.slow = Math.max(0, f.slow - dt);
       if (f.star > 0) f.invincible = Math.max(f.invincible, f.star);
@@ -816,6 +890,8 @@
         if (f.buffTimer <= 0) { f.dmgBoost = 1; f.speedBoost = 1; }
       }
       if (f.p.id === "red-4-2" && f.star <= 0) f.dmgBoost = 1;
+      if (f.p.id === "red-3-2") f.hp = Math.min(f.maxHp, f.hp + 3 * dt);
+      if (f.p.id === "black-1-1") f.hp = Math.min(f.maxHp, f.hp + 5 * dt);
       if (f.burn > 0) {
         f.burnTick += dt;
         while (f.burnTick >= 1) {
@@ -1137,11 +1213,115 @@
 
     function updateChessGimmick(f, o, dt) {
       const id = f.p.id;
-      if (!id || (!id.startsWith("ruka-") && !id.startsWith("chaos-") && id !== "black-6-2" && id !== "red-5-1")) return;
+      if (!id || (!id.startsWith("ruka-") && !id.startsWith("chaos-") && id !== "black-6-2" && id !== "red-5-1" && id !== "red-1-1" && id !== "red-2-2" && id !== "black-2-1" && id !== "black-4-1" && id !== "ruka-5-1")) return;
+      if (id === "black-2-1") {
+        if (f.snakeShield) {
+          f.snakeShieldTimer -= dt * (f.atkRate || 1);
+          f.vx = 0; f.vy = 0;
+          if (f.snakeShieldTimer <= 0) {
+            f.snakeShield = false;
+            if (f.p.id !== "red-6-1") f.immobile = false;
+          }
+        } else {
+          f.snakeCd -= dt * (f.atkRate || 1);
+          if (f.snakeCd <= 0) {
+            const target = nearestEnemyBody(f.slot, f.x, f.y);
+            if (target) {
+              if (f.snakeMode % 2 === 0) {
+                spawnShots(f, target, { count: 1, aim: "current", damage: 18, speed: 280, shape: "dragon", r: 16, range: 680, status: { burn: 5 } });
+                state.effects.push({ x: f.x, y: f.y - 30, text: "俱利伽罗的黑龙", life: 0.9, color: "#ffb36a" });
+                f.snakeCd = 3.2;
+              } else {
+                f.immobile = true; f.homeX = f.x; f.homeY = f.y;
+                f.snakeAngle = Math.atan2(target.y - f.y, target.x - f.x);
+                f.snakeShield = true; f.snakeShieldTimer = 4;
+                state.effects.push({ x: f.x, y: f.y - 30, text: "阿基里斯之盾", life: 0.9, color: "#ffd76a" });
+                f.snakeCd = 4.5;
+              }
+              f.snakeMode++;
+            }
+          }
+        }
+      }
+      if (id === "black-4-1") {
+        const target = nearestEnemyBody(f.slot, f.x, f.y);
+        if (f.fistDash) {
+          if (f.dash <= 0) f.fistDash = false;
+        } else {
+          f.vx = 0; f.vy = 0;
+          f.fistTimer += dt;
+          while (f.fistTimer >= 1) {
+            f.fistTimer -= 1;
+            f.fistStacks = Math.min(10, f.fistStacks + 1);
+          }
+          if (target && f.fistStacks > 0 && dist(f.x, f.y, target.x, target.y) <= 110) {
+            f.fistDamage = 10 + 2 * f.fistStacks;
+            f.fistStacks = 0; f.fistTimer = 0;
+            const a = Math.atan2(target.y - f.y, target.x - f.x);
+            f.vx = Math.cos(a) * 800; f.vy = Math.sin(a) * 800;
+            f.dash = 0.32; f.dashHit = false; f.fistDash = true; f.collCd = 0;
+            state.effects.push({ x: f.x, y: f.y - f.radius - 20, text: "魅拳 · 蓄势", life: 0.8, color: "#fff0cf" });
+          }
+        }
+      }
       const attackRate = f.atkRate || 1;
       if (id === "red-6-2") {
         if (f.atomCd > 0) f.atomCd = Math.max(0, f.atomCd - dt);
         if (f.atomMerge > 0) f.atomMerge = Math.max(0, f.atomMerge - dt);
+      }
+      if (id === "red-1-1") {
+        f.crossAngle = (f.crossAngle || 0) + dt * 0.72;
+        f.crossSize = 88 + Math.sin((state.roundTime + 0.8) * 1.15) * 34;
+        f.crossCd = Math.max(0, (f.crossCd || 0) - dt);
+        if (f.crossCd <= 0) {
+          f.crossCd = 0.42;
+          const targets = allBodies().filter(b => b.slot !== f.slot && b.hp > 0);
+          for (const b of targets) {
+            const dx = b.x - f.x, dy = b.y - f.y;
+            let hit = false;
+            for (const ang of [f.crossAngle, f.crossAngle + Math.PI / 4]) {
+              const ca = Math.cos(ang), sa = Math.sin(ang);
+              const rx = dx * ca + dy * sa;
+              const ry = -dx * sa + dy * ca;
+              const arm = Math.min(f.crossSize, 160);
+              if ((Math.abs(rx) < 14 && Math.abs(ry) < arm) || (Math.abs(ry) < 14 && Math.abs(rx) < arm)) hit = true;
+            }
+            if (hit) damage(b, 8, "#fff2b0", f);
+          }
+        }
+      }
+      if (id === "ruka-5-1") {
+        f.gimmickAtk -= dt * (f.atkRate || 1);
+        if (f.gimmickAtk <= 0) {
+          const target = nearestEnemyBody(f.slot, f.x, f.y);
+          if (target) castChessAttack(f, target);
+          f.gimmickAtk = 1.15;
+        }
+      }
+      if (id === "red-2-2") {
+        f.smallBolt -= dt * (f.atkRate || 1);
+        f.smallGift -= dt * (f.atkRate || 1);
+        if (f.smallBolt <= 0) {
+          const target = nearestEnemyBody(f.slot, f.x, f.y);
+          if (target) spawnBeams(f, target, { count: 1, aim: "current", damage: 10, range: 700, style: "lightning", status: { paralyze: 1.4 } });
+          f.smallBolt = 2;
+        }
+        if (f.smallGift <= 0) {
+          f.smallGift = 10;
+          const roll = Math.random();
+          if (roll < 0.1) {
+            const a = spawnAlly(f, "mikaClone", 1, f.x - 28, f.y + 24, { radius: 10, speed: 150, damage: 3, head: "img/arena/wp.png" });
+            if (a) a.p = Object.assign({}, a.p, { name: "米卡艾拉酱", displayName: "米卡艾拉酱" });
+            state.effects.push({ x: f.x, y: f.y - 30, text: "召唤米卡艾拉酱", life: 1, color: "#ffe6a0" });
+          } else if (roll < 0.6) {
+            const a = spawnAlly(f, "luciClone", 1, f.x + 28, f.y + 24, { radius: 10, speed: 150, damage: 3, head: "img/arena/wh2.png" });
+            if (a) a.p = Object.assign({}, a.p, { name: "露西菲娜酱", displayName: "露西菲娜酱" });
+            state.effects.push({ x: f.x, y: f.y - 30, text: "召唤露西菲娜酱", life: 1, color: "#d8ecff" });
+          } else {
+            f.holyShield = true;
+            state.effects.push({ x: f.x, y: f.y - 30, text: "圣光庇护", life: 1, color: "#fff8c8" });
+          }
+        }
       }
       if (id === "red-5-1") {
         f.urielBurst -= dt * attackRate;
@@ -1190,7 +1370,7 @@
             if (target) {
               f.idiaPhase = 1; f.idiaTimer = 0.5;
               f.idiaAngle = Math.atan2(target.y - f.y, target.x - f.x);
-              f.hold = 0.5;
+              f.hold = 0.5; f.chargeTotal = 0.5; f.chargeLeft = 0.5;
               f.vx = f.vy = 0;
             }
           }
@@ -1242,8 +1422,8 @@
         f.phaseTimer -= dt;
         if (f.phaseTimer <= 0) {
           f.phaseTimer = 9;
-          f.invincible = Math.max(f.invincible, 2);
-          f.noDamageDealt = Math.max(f.noDamageDealt, 2);
+          f.invincible = Math.max(f.invincible, 4);
+          f.noDamageDealt = Math.max(f.noDamageDealt, 4);
           f.phaseActive = true;
           state.effects.push({ x: f.x, y: f.y - f.radius - 20, text: "虚化", life: 1, color: "#cfe6ff" });
         }
@@ -1282,7 +1462,7 @@
               const past = clampToArena(target.x - target.vx * 0.5, target.y - target.vy * 0.5, f.radius);
               f.x = past.x; f.y = past.y;
               f.marchAngle = Math.atan2(target.y - f.y, target.x - f.x);
-              f.marchTimer = 0.25;
+              f.marchTimer = 0.25; f.chargeTotal = 0.25; f.chargeLeft = 0.25;
               f.vx = f.vy = 0;
               state.effects.push({ x: f.x, y: f.y - f.radius - 16, text: "蓄力", life: 0.25, color: "#fff0a0" });
             }
@@ -1347,21 +1527,18 @@
         splitMetatron(f); f.skillCd = 2.2; return;
       }
       if (id === "red-1-1") {
-        spawnBeams(f, o, { count: 8, aim: "eight", damage: Math.max(3, Math.round(dmg * 0.45)), range: 630 });
-        f.skillCd = 3.4;
+        f.skillCd = 999;
       } else if (id === "red-2-1") {
         const a = Math.atan2(o.y - f.y, o.x - f.x);
         f.dash = 0.36; f.dashHit = false; f.vx = Math.cos(a) * 850; f.vy = Math.sin(a) * 850; f.collCd = 0;
         f.skillCd = 3.8;
       } else if (id === "red-2-2") {
-        spawnTrapAt(f, o, o.x, o.y, { damage: Math.max(4, dmg), radius: 52, delay: 0.5, status: { paralyze: 1.2 } });
-        f.skillCd = 3.3;
+        f.skillCd = 999;
       } else if (id === "red-3-1") {
         spawnShots(f, o, { count: 1, aim: "current", damage: Math.max(2, Math.round(dmg * 0.55)), speed: 380, shape: "needle", range: 620, status: { burn: 5 } });
         f.skillCd = 1.55;
       } else if (id === "red-3-2") {
-        state.heals.push({ x: f.x, y: f.y, r: ARENA_R * 0.5, life: 5, slot: f.slot });
-        f.skillCd = 8.2;
+        f.skillCd = 999;
       } else if (id === "red-4-1") {
         const a = Math.atan2(o.y - f.y, o.x - f.x);
         f.dash = 0.32; f.dashHit = false; f.vx = Math.cos(a) * 760; f.vy = Math.sin(a) * 760; f.collCd = 0;
@@ -1383,12 +1560,11 @@
             src: f, img: imgFor("img/arena/planet.png")
           });
         }
-        f.hold = 1; f.planetTimer = 0;
+        f.hold = 1; f.planetTimer = 0; f.chargeTotal = 1; f.chargeLeft = 1;
         f.skillCd = 10;
       } else if (id === "red-6-1") {
-        spawnShots(f, o, { count: 2, aim: "current", damage: Math.max(2, Math.round(dmg * 0.25)), speed: 330, shape: "needle", range: 480 });
-        if (Math.random() < 0.35) spawnBeams(f, o, { count: 1, aim: "current", damage: Math.max(2, Math.round(dmg * 0.35)), range: 520 });
-        f.skillCd = 1.9 / 2;
+        spawnShots(f, o, { count: 2, aim: "current", damage: Math.max(1, Math.round(dmg * 0.125)), speed: 330, shape: "needle", range: 480 });
+        f.skillCd = 0.5;
       } else if (id === "red-6-2") {
         if (f.hp / f.maxHp <= 0.5 && !f.merged) {
           f.merged = true; f.dmgBoost = 1.25; f.invincible = Math.max(f.invincible, 1);
@@ -1399,29 +1575,21 @@
         f.skillCd = 2.6;
       } else if (id === "red-7-3") {
         if (f.spearTimer <= 0) {
-          f.hold = 5; f.spearTimer = 5;
+          f.hold = 5; f.spearTimer = 5; f.chargeTotal = 5; f.chargeLeft = 5;
           f.skillCd = 21;
         }
       } else if (id === "black-1-1") {
         spawnShots(f, o, { count: 1, aim: "current", damage: Math.max(4, Math.round(dmg * 1.1)), speed: 150, shape: "circle", range: 620 });
         f.skillCd = 4.5;
       } else if (id === "black-2-1") {
-        f.defense = !f.defense;
-        if (f.defense) f.shield = 5;
-        else {
-          spawnShots(f, o, { count: 3, aim: "current", damage: Math.max(3, Math.round(dmg * 0.5)), speed: 300, shape: "circle", range: 620 });
-        }
-        f.skillCd = 5;
+        f.skillCd = 999;
       } else if (id === "black-2-2") {
         spawnShots(f, o, { count: 8, aim: "eight", damage: Math.max(2, Math.round(dmg * 0.35)), speed: 300, shape: "needle", range: 600, special: "reflect" });
         f.skillCd = 4;
       } else if (id === "black-3-1") {
         f.skillCd = 999;
       } else if (id === "black-4-1") {
-        const a = Math.atan2(o.y - f.y, o.x - f.x);
-        f.dash = 0.28; f.dashHit = false; f.vx = Math.cos(a) * 720; f.vy = Math.sin(a) * 720; f.collCd = 0;
-        if (Math.random() < 0.55) spawnShots(f, o, { count: 1, aim: "current", damage: Math.max(2, Math.round(dmg * 0.5)), speed: 240, shape: "heart", r: 11, range: 560, status: { control: 2 } });
-        f.skillCd = 4.5;
+        f.skillCd = 999;
       } else if (id === "black-5-1") {
         spawnTrapAt(f, o, f.x, f.y, { damage: 4, radius: 38, delay: 0.2, status: { burn: 3 } });
         f.skillCd = 3;
@@ -1533,7 +1701,8 @@
         h.life -= dt;
         for (const body of allBodies()) {
           if (body.slot !== h.slot || body.hp <= 0) continue;
-          body.hp = Math.min(body.maxHp, body.hp + 2 * dt);
+          if (Math.hypot(body.x - h.x, body.y - h.y) > h.r) continue;
+          body.hp = Math.min(body.maxHp, body.hp + (h.rate || 2) * dt);
         }
         if (h.life <= 0) state.heals.splice(i, 1);
       }
@@ -1729,10 +1898,17 @@
         const target = nearestEnemyBody(a.slot, a.x, a.y);
         if (target) spawnBeams(a, target, { count: 1, aim: "current", damage: 7, range: 720 });
         a.atkCd = 2.6;
+      } else if ((a.kind === "mikaClone" || a.kind === "luciClone") && a.atkCd <= 0) {
+        const target = nearestEnemyBody(a.slot, a.x, a.y);
+        if (target) spawnShots(a, target, { count: 1, aim: "current", damage: 3, speed: 300, shape: "circle", r: 5, range: 560 });
+        a.atkCd = 1.8;
       }
     }
 
     function collisionPower(f) {
+      if (f.p.id === "black-2-1" && f.snakeShield) return 10;
+      if (f.p.id === "black-4-1" && f.fistDash) return f.fistDamage;
+      if (f.p.id === "red-1-1") return 0;
       if (f.p.id === "chaos-5-1" && f.phaseActive) return Math.max(10, Math.round(f.stats.damage * 0.85));
       if (f.noDamageDealt > 0 || f.p.id === "chaos-6-1") return 0;
       const isUnit = !f.isAlly || f.teammate;
@@ -1832,6 +2008,7 @@
       const a = fighter("a"), b = fighter("b");
       if (!a || !b || state.phase !== "fight") return;
       if (state.timeStop > 0 && a.p.id !== "ruka-4-1" && b.p.id !== "ruka-4-1") return;
+      if (a.noCollision || b.noCollision) return;
       const d = dist(a.x, a.y, b.x, b.y);
       const min = a.radius + b.radius;
       if (d < min && d > 0.001) {
@@ -1875,6 +2052,8 @@
           if (a.p.id === "red-2-1" && isDashing(a)) state.effects.push({ x: b.x, y: b.y - b.radius - 12, text: "天军之剑", life: 0.8, color: "#fff0a0" });
           if (b.p.id === "red-2-1" && isDashing(b)) state.effects.push({ x: a.x, y: a.y - a.radius - 12, text: "天军之剑", life: 0.8, color: "#fff0a0" });
           a.collCd = b.collCd = 0.48;
+          if (a.fistDash) a.fistDash = false;
+          if (b.fistDash) b.fistDash = false;
           if (isDashing(a)) a.dashHit = true;
           if (isDashing(b)) b.dashHit = true;
           if (a.star > 0) {
@@ -2038,6 +2217,24 @@
         ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2);
         if (!l.fired) {
           ctx.setLineDash([9, 9]); ctx.strokeStyle = "rgba(255,120,160,.55)"; ctx.lineWidth = 2;
+        } else if (l.style === "lightning") {
+          ctx.setLineDash([]);
+          ctx.strokeStyle = "#c9b6ff"; ctx.lineWidth = 2.5;
+          ctx.shadowColor = "#9f7dff"; ctx.shadowBlur = 16;
+          ctx.beginPath();
+          const dx = l.x2 - l.x1, dy = l.y2 - l.y1;
+          const len = Math.hypot(dx, dy) || 1;
+          const nx = -dy / len, ny = dx / len;
+          for (let i = 0; i <= 10; i++) {
+            const t = i / 10;
+            const off = i === 0 || i === 10 ? 0 : (Math.sin(i * 9.7 + performance.now() / 95) * 10);
+            const px = l.x1 + dx * t + nx * off;
+            const py = l.y1 + dy * t + ny * off;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 1;
+          ctx.stroke();
         } else if (l.style === "atom") {
           ctx.setLineDash([]);
           ctx.strokeStyle = "#37ff9a"; ctx.lineWidth = 26;
@@ -2065,6 +2262,15 @@
           const dr = p.drawR || p.r;
           ctx.shadowBlur = 32;
           ctx.drawImage(p.img, p.x - dr, p.y - dr, dr * 2, dr * 2);
+        } else if (p.shape === "dragon") {
+          const a = Math.atan2(p.vy, p.vx);
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(a);
+          ctx.shadowColor = "#ff8a3d"; ctx.shadowBlur = 22;
+          ctx.fillStyle = "#1a0c14"; ctx.beginPath(); ctx.ellipse(0, 0, 21, 13, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#ff8a3d"; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-2, -10); ctx.lineTo(4, 0); ctx.lineTo(-2, 10); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#ffd25a"; ctx.beginPath(); ctx.arc(10, -3, 2, 0, Math.PI * 2); ctx.arc(10, 3, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "#ffb86a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-16, -8); ctx.lineTo(-27, 0); ctx.lineTo(-16, 8); ctx.stroke();
+          ctx.restore();
         } else if (p.shape === "spear") {
           const a = Math.atan2(p.vy, p.vx);
           const c = Math.cos(a), sn = Math.sin(a);
@@ -2231,6 +2437,62 @@
       ctx.globalCompositeOperation = "lighter";
 
       // 蓄力：旋转能量环 + 向心粒子
+      if (f.chargeTotal > 0 && f.chargeLeft > 0) {
+        const progress = Math.max(0, Math.min(1, 1 - f.chargeLeft / f.chargeTotal));
+        ctx.save();
+        ctx.beginPath(); ctx.arc(x, y, r + 17, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.lineWidth = 3; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, y, r + 17, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+        ctx.strokeStyle = "#fff1b8"; ctx.lineWidth = 4; ctx.lineCap = "round";
+        ctx.shadowColor = "#ffe6a0"; ctx.shadowBlur = 10; ctx.stroke();
+        ctx.restore();
+      }
+      if (f.p.id === "red-1-1") {
+        for (let k = 0; k < 2; k++) {
+          const a = f.crossAngle + k * Math.PI / 4;
+          const size = f.crossSize * (k ? 0.82 : 1);
+          ctx.strokeStyle = k ? "#fff8d8" : "#ffe28a";
+          ctx.lineWidth = k ? 3 : 5;
+          ctx.globalAlpha = 0.85;
+          for (let arm = 0; arm < 4; arm++) {
+            const aa = a + arm * Math.PI / 2;
+            const c = Math.cos(aa), sn = Math.sin(aa);
+            ctx.beginPath(); ctx.moveTo(x + c * 8, y + sn * 8); ctx.lineTo(x + c * size, y + sn * size); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + c * size, y + sn * size);
+            ctx.lineTo(x + c * (size - 13) - sn * 7, y + sn * (size - 13) + c * 7);
+            ctx.lineTo(x + c * (size - 13) + sn * 7, y + sn * (size - 13) - c * 7);
+            ctx.closePath(); ctx.fillStyle = k ? "#fff8d8" : "#ffe28a"; ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+      if (f.p.id === "black-4-1" && f.fistStacks > 0) {
+        for (let i = 0; i < f.fistStacks; i++) {
+          const a = -Math.PI / 2 + i * Math.PI * 2 / Math.max(1, f.fistStacks);
+          const fx = x + Math.cos(a) * (r + 25), fy = y + Math.sin(a) * (r + 25);
+          ctx.globalAlpha = 0.85; ctx.fillStyle = "rgba(255,255,255,.16)";
+          ctx.beginPath(); ctx.arc(fx, fy, 7, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "#fff8e0"; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.fillStyle = "#fff8e0"; ctx.font = "700 7px 'Microsoft YaHei',sans-serif";
+          ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("拳", fx, fy + 0.5);
+        }
+        ctx.globalAlpha = 1;
+      }
+      if (f.snakeShield) {
+        const a = f.snakeAngle;
+        const sx = x + Math.cos(a) * (r + 12), sy = y + Math.sin(a) * (r + 12);
+        const nx = -Math.sin(a), ny = Math.cos(a);
+        ctx.globalAlpha = 0.9; ctx.strokeStyle = "#ffe6a0"; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(sx - nx * 28, sy - ny * 28); ctx.lineTo(sx + nx * 28, sy + ny * 28); ctx.stroke();
+        ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      if (f.atomMerge > 0) {
+        ctx.globalAlpha = 0.7;
+        ctx.strokeStyle = "#8dffc0"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, y, r + 9, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
       if (f.hold > 0 || f.planetTimer > 0 || f.spearTimer > 0) {
         const color = f.spearTimer > 0 ? "#ffd86e" : f.planetTimer > 0 ? "#f0a6ff" : "#ffcf7a";
         for (let i = 0; i < 3; i++) {

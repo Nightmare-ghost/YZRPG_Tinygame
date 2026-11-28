@@ -1277,14 +1277,14 @@
           f.crossCd = 0.42;
           const targets = allBodies().filter(b => b.slot !== f.slot && b.hp > 0);
           for (const b of targets) {
-            const dx = b.x - f.x, dy = b.y - f.y;
+            const dx = b.x - CX, dy = b.y - CY;
             let hit = false;
             for (const ang of [f.crossAngle, f.crossAngle + Math.PI / 4]) {
               const ca = Math.cos(ang), sa = Math.sin(ang);
               const rx = dx * ca + dy * sa;
               const ry = -dx * sa + dy * ca;
-              const arm = Math.min(f.crossSize, 160);
-              if ((Math.abs(rx) < 14 && Math.abs(ry) < arm) || (Math.abs(ry) < 14 && Math.abs(rx) < arm)) hit = true;
+              const arm = Math.min(f.crossSize, 180);
+              if ((Math.abs(rx) < 15 && Math.abs(ry) < arm) || (Math.abs(ry) < 15 && Math.abs(rx) < arm)) hit = true;
             }
             if (hit) damage(b, 8, "#fff2b0", f);
           }
@@ -2448,22 +2448,29 @@
         ctx.restore();
       }
       if (f.p.id === "red-1-1") {
+        // 固定在场中的两个交叉星芒，形状接近 ✨
         for (let k = 0; k < 2; k++) {
           const a = f.crossAngle + k * Math.PI / 4;
-          const size = f.crossSize * (k ? 0.82 : 1);
-          ctx.strokeStyle = k ? "#fff8d8" : "#ffe28a";
-          ctx.lineWidth = k ? 3 : 5;
-          ctx.globalAlpha = 0.85;
-          for (let arm = 0; arm < 4; arm++) {
-            const aa = a + arm * Math.PI / 2;
-            const c = Math.cos(aa), sn = Math.sin(aa);
-            ctx.beginPath(); ctx.moveTo(x + c * 8, y + sn * 8); ctx.lineTo(x + c * size, y + sn * size); ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x + c * size, y + sn * size);
-            ctx.lineTo(x + c * (size - 13) - sn * 7, y + sn * (size - 13) + c * 7);
-            ctx.lineTo(x + c * (size - 13) + sn * 7, y + sn * (size - 13) - c * 7);
-            ctx.closePath(); ctx.fillStyle = k ? "#fff8d8" : "#ffe28a"; ctx.fill();
+          const size = f.crossSize * (k ? 0.78 : 1);
+          ctx.save();
+          ctx.translate(CX, CY);
+          ctx.rotate(a);
+          ctx.beginPath();
+          for (let arm = 0; arm < 8; arm++) {
+            const rr = arm % 2 === 0 ? size : size * 0.16;
+            const aa = arm * Math.PI / 4;
+            const px = Math.cos(aa) * rr, py = Math.sin(aa) * rr;
+            if (arm === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
           }
+          ctx.closePath();
+          ctx.globalAlpha = k ? 0.75 : 0.9;
+          ctx.fillStyle = k ? "rgba(255,248,216,.35)" : "rgba(255,226,138,.42)";
+          ctx.fill();
+          ctx.strokeStyle = k ? "#fff8d8" : "#ffe28a";
+          ctx.lineWidth = k ? 2 : 3;
+          ctx.shadowColor = "#ffe6a0"; ctx.shadowBlur = 18;
+          ctx.stroke();
+          ctx.restore();
         }
         ctx.globalAlpha = 1;
       }

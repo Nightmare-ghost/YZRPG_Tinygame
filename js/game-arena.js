@@ -375,7 +375,7 @@
         wither: 0, witherTick: 0, grudge: 0, atkBuff: 1, atkNerf: 1, noDamageDealt: 0,
         collisionLock: 0, clubAngle: Math.random() * Math.PI * 2, clubCd: 0,
         phaseTimer: 0, phaseActive: false, atomCd: 0, atomMerge: 0, marchTimer: 0, marchCharge: 0, marchAngle: 0,
-        chargeTotal: 0, chargeLeft: 0, crossAngle: Math.random() * Math.PI * 2, crossSize: 100, crossCd: 0,
+        chargeTotal: 0, chargeLeft: 0, crossAngle: Math.random() * Math.PI * 2, crossSize: 100, crossSize2: 112, crossCd: 0,
         smallBolt: 2, smallGift: 10, holyShield: false, fistStacks: 0, fistTimer: 0, fistDash: false, fistDamage: 0,
         snakeShield: false, snakeShieldTimer: 0, snakeAngle: 0, snakeCd: 2.5, snakeMode: 0,
         gimmickAtk: 0, idiaPhase: 0, idiaTimer: 0, idiaAngle: 0, bladeAura: 0,
@@ -1272,6 +1272,7 @@
       if (id === "red-1-1") {
         f.crossAngle = (f.crossAngle || 0) + dt * 0.72;
         f.crossSize = 88 + Math.sin((state.roundTime + 0.8) * 1.15) * 34;
+        f.crossSize2 = 96 + Math.sin((state.roundTime + 2.3) * 0.83) * 30;
         f.crossCd = Math.max(0, (f.crossCd || 0) - dt);
         if (f.crossCd <= 0) {
           f.crossCd = 0.42;
@@ -1279,11 +1280,15 @@
           for (const b of targets) {
             const dx = b.x - CX, dy = b.y - CY;
             let hit = false;
-            for (const ang of [f.crossAngle, f.crossAngle + Math.PI / 4]) {
-              const ca = Math.cos(ang), sa = Math.sin(ang);
+            const stars = [
+              { ang: f.crossAngle, size: f.crossSize },
+              { ang: f.crossAngle + Math.PI / 4, size: f.crossSize2 }
+            ];
+            for (const star of stars) {
+              const ca = Math.cos(star.ang), sa = Math.sin(star.ang);
               const rx = dx * ca + dy * sa;
               const ry = -dx * sa + dy * ca;
-              const arm = Math.min(f.crossSize, 180);
+              const arm = Math.min(star.size, 180);
               if ((Math.abs(rx) < 15 && Math.abs(ry) < arm) || (Math.abs(ry) < 15 && Math.abs(rx) < arm)) hit = true;
             }
             if (hit) damage(b, 8, "#fff2b0", f);
@@ -2451,7 +2456,7 @@
         // 固定在场中的两个交叉星芒，形状接近 ✨
         for (let k = 0; k < 2; k++) {
           const a = f.crossAngle + k * Math.PI / 4;
-          const size = f.crossSize * (k ? 0.78 : 1);
+          const size = k ? f.crossSize2 : f.crossSize;
           ctx.save();
           ctx.translate(CX, CY);
           ctx.rotate(a);
